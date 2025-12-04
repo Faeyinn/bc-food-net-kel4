@@ -10,6 +10,18 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-coffee-50: #fdf8f6;
+  --color-coffee-100: #f2e8e5;
+  --color-coffee-200: #eaddd7;
+  --color-coffee-300: #e0cec7;
+  --color-coffee-400: #d2bab0;
+  --color-coffee-500: #a1887f;
+  --color-coffee-600: #8d6e63;
+  --color-coffee-700: #795548;
+  --color-coffee-800: #6d4c41;
+  --color-coffee-900: #5d4037;
+  --color-coffee-950: #4e342e;
 }
 
 @media (prefers-color-scheme: dark) {

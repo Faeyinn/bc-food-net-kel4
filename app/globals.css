@@ -11,17 +11,17 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-coffee-50: #fdf8f6;
-  --color-coffee-100: #f2e8e5;
-  --color-coffee-200: #eaddd7;
-  --color-coffee-300: #e0cec7;
-  --color-coffee-400: #d2bab0;
-  --color-coffee-500: #a1887f;
-  --color-coffee-600: #8d6e63;
-  --color-coffee-700: #795548;
-  --color-coffee-800: #6d4c41;
-  --color-coffee-900: #5d4037;
-  --color-coffee-950: #4e342e;
+  --color-coffee-50: #fbf8f6;
+  --color-coffee-100: #f5efe9;
+  --color-coffee-200: #ebe0d6;
+  --color-coffee-300: #dcbfae;
+  --color-coffee-400: #c8a38e;
+  --color-coffee-500: #967259;
+  --color-coffee-600: #7c5c46;
+  --color-coffee-700: #624636;
+  --color-coffee-800: #4a3328;
+  --color-coffee-900: #332119;
+  --color-coffee-950: #1c110c;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,7 +32,12 @@
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image: url("/unandbakti25.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }

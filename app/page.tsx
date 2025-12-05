@@ -98,7 +98,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-coffee-500 to-coffee-700 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row">
         {/* Left Side - Image/Branding */}
         <div className="md:w-1/2 bg-coffee-50 p-6 md:p-12 flex flex-col items-center justify-center text-center">

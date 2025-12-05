@@ -17,14 +17,14 @@ interface Order {
 }
 
 interface TransactionItem {
-  id: number;
-  name: string;
-  price: number;
+  id_item: string;
+  nama_item: string;
+  harga_item: number;
   quantity: number;
   notes: string;
-  image: string;
-  category: string;
-  description: string;
+  image?: string;
+  category?: string;
+  description?: string;
 }
 
 interface BuyerTransaction {

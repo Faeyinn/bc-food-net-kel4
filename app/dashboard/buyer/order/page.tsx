@@ -14,6 +14,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { formatRupiah } from "../../../utils/format";
 import { useData } from "../../../context/DataContext";
 import { supabase } from "@/app/lib/supabase";
+import { useAuth } from "../../../context/AuthContext";
+import Swal from "sweetalert2";
 
 interface MenuItem {
   id_item: string;
@@ -34,6 +36,7 @@ export default function BuyerOrderPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setBuyerTransaction } = useData();
+  const { user } = useAuth();
 
   const storeId = searchParams.get("storeId");
   const storeName = searchParams.get("storeName");
@@ -44,7 +47,9 @@ export default function BuyerOrderPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [itemNotes, setItemNotes] = useState<{ [key: string]: string }>({});
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState("QRIS");
   const [loading, setLoading] = useState(true);
 
   const categories = ["Semua", "Makanan", "Minuman", "Snack"];
@@ -62,7 +67,7 @@ export default function BuyerOrderPage() {
         if (error) throw error;
 
         // Map and categorize items
-        const mappedItems = (data || []).map((item: any) => {
+        const mappedItems = (data || []).map((item: MenuItem) => {
           let category = "Makanan";
           const lowerName = item.nama_item.toLowerCase();
           if (
@@ -106,8 +111,17 @@ export default function BuyerOrderPage() {
     }));
   };
 
+  const handleNoteChange = (itemId: string, note: string) => {
+    setItemNotes((prev) => ({
+      ...prev,
+      [itemId]: note,
+    }));
+  };
+
   const addToCart = (item: MenuItem) => {
     const quantity = quantities[item.id_item] || 0;
+    const note = itemNotes[item.id_item] || "";
+
     if (quantity > 0) {
       const existingItemIndex = cart.findIndex(
         (i) => i.id_item === item.id_item
@@ -115,12 +129,18 @@ export default function BuyerOrderPage() {
       if (existingItemIndex > -1) {
         const newCart = [...cart];
         newCart[existingItemIndex].quantity += quantity;
+        if (note) {
+          newCart[existingItemIndex].notes = newCart[existingItemIndex].notes
+            ? `${newCart[existingItemIndex].notes}, ${note}`
+            : note;
+        }
         setCart(newCart);
       } else {
-        setCart([...cart, { ...item, quantity, notes: "" }]);
+        setCart([...cart, { ...item, quantity, notes: note }]);
       }
-      // Reset quantity for this item
+      // Reset quantity and note for this item
       setQuantities((prev) => ({ ...prev, [item.id_item]: 0 }));
+      setItemNotes((prev) => ({ ...prev, [item.id_item]: "" }));
     }
   };
 
@@ -133,23 +153,129 @@ export default function BuyerOrderPage() {
     0
   );
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cart.length === 0) return;
+    if (!user) {
+      Swal.fire("Error", "Anda harus login untuk memesan", "error");
+      return;
+    }
+    if (!tableNumber) {
+      Swal.fire(
+        "Error",
+        "Nomor meja tidak ditemukan. Silakan scan ulang QR code atau pilih meja kembali.",
+        "error"
+      );
+      return;
+    }
 
-    const currentTimestamp = Date.now();
-    const transactionData = {
-      id: `TRX-${currentTimestamp}`,
-      storeName: storeName || "Toko",
-      tableNumber: tableNumber || "-",
-      items: cart,
-      totalAmount,
-      status: "Menunggu Konfirmasi",
-      timestamp: new Date().toLocaleString(),
-      paymentMethod: "QRIS", // Default
-    };
+    setLoading(true);
+    try {
+      // Generate shorter IDs to fit varchar(20)
+      const timestampStr = Date.now().toString().slice(-9);
+      const randomSuffix = Math.floor(Math.random() * 1000)
+        .toString()
+        .padStart(3, "0");
 
-    setBuyerTransaction(transactionData);
-    router.push("/dashboard/buyer/transaction");
+      // 1. Create Sesi Pemesanan
+      const sessionId = `SES${timestampStr}${randomSuffix}`;
+      const { data: sesiData, error: sesiError } = await supabase
+        .from("sesi_pemesanan")
+        .insert({
+          id_sesi: sessionId,
+          no_meja: tableNumber,
+          id_pelanggan: user.uid,
+          tanggal_pemesanan: new Date().toISOString(),
+          status_sesi: "AKTIF",
+        })
+        .select()
+        .single();
+
+      if (sesiError) throw sesiError;
+
+      // 2. Insert into Meja
+      const { error: mejaError } = await supabase.from("meja").upsert({
+        no_meja: tableNumber,
+        status_meja: "TERISI",
+        id_sesi: sessionId,
+      });
+
+      if (mejaError) {
+        console.error("Error inserting into meja:", mejaError);
+        throw new Error(`Gagal update meja: ${mejaError.message}`);
+      }
+
+      // 3. Create Transaksi
+      const transactionId = `TRX${timestampStr}${randomSuffix}`;
+
+      let dbJenisTransaksi = "NON-TUNAI";
+      if (paymentMethod === "TUNAI" || paymentMethod === "Cash") {
+        dbJenisTransaksi = "TUNAI";
+      }
+
+      const { data: trxData, error: trxError } = await supabase
+        .from("transaksi")
+        .insert({
+          id_transaksi: transactionId,
+          id_sesi: sessionId,
+          id_toko: storeId,
+          jenis_transaksi: dbJenisTransaksi,
+          total_harga: totalAmount,
+          status_pesanan: "MENUNGGU",
+          tanggal_transaksi: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (trxError) throw trxError;
+
+      // 4. Create Antrian Order (Items)
+      const orderItems = cart.map((item, index) => ({
+        order_line: `ORD-${transactionId}-${index + 1}`,
+        id_transaksi: transactionId,
+        id_item: item.id_item,
+        jumlah_item: item.quantity,
+        subtotal: item.harga_item * item.quantity,
+        catatan: item.notes || "",
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("antrian_order")
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Success
+      const transactionData = {
+        id: transactionId,
+        storeName: storeName || "Toko",
+        tableNumber: tableNumber || "-",
+        items: cart,
+        totalAmount,
+        status: "Menunggu Konfirmasi",
+        timestamp: new Date().toLocaleString(),
+        paymentMethod: paymentMethod,
+      };
+
+      setBuyerTransaction(transactionData);
+      router.push("/dashboard/buyer/transaction");
+    } catch (error: any) {
+      console.error("Checkout Error:", error);
+      let errorMessage =
+        error?.message || "Terjadi kesalahan saat memproses pesanan.";
+
+      if (errorMessage.includes("Could not find the 'catatan' column")) {
+        errorMessage =
+          "Kolom 'catatan' belum ada di database. Silakan tambahkan kolom 'catatan' (text) pada tabel 'antrian_order' di Supabase.";
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Memesan",
+        text: errorMessage,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredItems = menuItems.filter((item) => {
@@ -248,6 +374,15 @@ export default function BuyerOrderPage() {
                 <p className="font-bold text-coffee-600">
                   {formatRupiah(item.harga_item)}
                 </p>
+                <input
+                  type="text"
+                  placeholder="Catatan (opsional)"
+                  value={itemNotes[item.id_item] || ""}
+                  onChange={(e) =>
+                    handleNoteChange(item.id_item, e.target.value)
+                  }
+                  className="w-full mt-2 px-2 py-1 text-xs border border-coffee-200 rounded-lg focus:outline-none focus:border-coffee-500 bg-coffee-50/50"
+                />
               </div>
               <div className="flex flex-col items-end justify-between">
                 <div className="flex items-center space-x-2 bg-coffee-50 rounded-lg p-1">
@@ -336,6 +471,27 @@ export default function BuyerOrderPage() {
             )}
 
             <div className="border-t border-coffee-200 pt-4">
+              <div className="mb-4">
+                <p className="font-semibold text-coffee-900 mb-2">
+                  Metode Pembayaran
+                </p>
+                <div className="flex space-x-2">
+                  {["QRIS", "TRANSFER", "TUNAI"].map((method) => (
+                    <button
+                      key={method}
+                      onClick={() => setPaymentMethod(method)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
+                        paymentMethod === method
+                          ? "bg-coffee-600 text-white border-coffee-600"
+                          : "bg-white text-coffee-600 border-coffee-200 hover:bg-coffee-50"
+                      }`}
+                    >
+                      {method}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex justify-between items-center mb-6">
                 <span className="font-bold text-coffee-900">
                   Total Pembayaran

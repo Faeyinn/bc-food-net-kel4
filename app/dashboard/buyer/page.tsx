@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "@/app/lib/supabase";
+import Swal from "sweetalert2";
 
 interface Store {
   id_user: string;
@@ -39,10 +40,20 @@ export default function BuyerHomePage() {
   }, []);
 
   const handleSelectStore = (store: Store) => {
+    if (!tableNumber) {
+      Swal.fire({
+        icon: "warning",
+        title: "Mohon Maaf",
+        text: "Harap isi nomor meja terlebih dahulu.",
+        confirmButtonColor: "#8d6e63",
+      });
+      return;
+    }
+
     const params = new URLSearchParams();
     params.set("storeId", store.id_user);
     params.set("storeName", store.nama);
-    if (tableNumber) params.set("tableNumber", tableNumber);
+    params.set("tableNumber", tableNumber);
 
     router.push(`/dashboard/buyer/order?${params.toString()}`);
   };
@@ -60,21 +71,11 @@ export default function BuyerHomePage() {
             <p className="font-semibold text-coffee-800">No. Meja</p>
             <input
               type="text"
-              placeholder="15"
+              placeholder=""
               value={tableNumber}
               onChange={(e) => setTableNumber(e.target.value)}
               className="w-full px-1 py-1 text-base text-center bg-transparent border-b border-coffee-300 focus:border-coffee-600 outline-none font-bold text-coffee-900"
             />
-          </div>
-          <div className="p-3 bg-coffee-50 rounded-lg flex-1">
-            <p className="font-semibold text-coffee-800">Hari / Tanggal</p>
-            <p className="text-xs text-coffee-700 font-medium mt-1">
-              {new Date().toLocaleDateString("id-ID", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
-            </p>
           </div>
         </div>
 

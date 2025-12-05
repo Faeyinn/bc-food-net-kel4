@@ -17,11 +17,29 @@ interface Order {
   // Or we can just show id_transaksi/id_sesi as identifier.
 }
 
+interface OrderDetail {
+  order_line: string;
+  jumlah_item: number;
+  subtotal: number;
+  catatan: string;
+  item: {
+    nama_item: string;
+    harga_item: number;
+    image?: string;
+  };
+}
+
 export default function SellerOrdersPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Detail Modal State
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -81,9 +99,40 @@ export default function SellerOrdersPage() {
     }
   };
 
-  const handleViewOrder = (orderId: string) => {
-    // router.push(`/dashboard/seller/orders/${orderId}`);
-    Swal.fire("Info", "Detail pesanan belum tersedia di demo ini", "info");
+  const handleViewOrder = async (order: Order) => {
+    setSelectedOrder(order);
+    setShowDetailModal(true);
+    setLoadingDetails(true);
+    setOrderDetails([]);
+
+    try {
+      const { data, error } = await supabase
+        .from("antrian_order")
+        .select(
+          `
+          order_line,
+          jumlah_item,
+          subtotal,
+          catatan,
+          item (
+            nama_item,
+            harga_item,
+            image
+          )
+        `
+        )
+        .eq("id_transaksi", order.id_transaksi);
+
+      if (error) throw error;
+
+      // Cast data to OrderDetail[] since Supabase types might verify strictly
+      setOrderDetails(data as unknown as OrderDetail[]);
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+      Swal.fire("Error", "Gagal memuat detail pesanan", "error");
+    } finally {
+      setLoadingDetails(false);
+    }
   };
 
   return (
@@ -105,10 +154,13 @@ export default function SellerOrdersPage() {
             <thead className="bg-coffee-50">
               <tr>
                 <th className="px-4 py-3 text-xs font-bold text-coffee-700 uppercase tracking-wider text-left">
-                  ID Transaksi
+                  ID
                 </th>
                 <th className="px-4 py-3 text-xs font-bold text-coffee-700 uppercase tracking-wider text-left">
                   Status
+                </th>
+                <th className="px-4 py-3 text-xs font-bold text-coffee-700 uppercase tracking-wider text-center">
+                  Aksi
                 </th>
               </tr>
             </thead>
@@ -116,7 +168,7 @@ export default function SellerOrdersPage() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={2}
+                    colSpan={3}
                     className="px-4 py-4 text-center text-coffee-500"
                   >
                     Memuat pesanan...
@@ -125,7 +177,7 @@ export default function SellerOrdersPage() {
               ) : orders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={2}
+                    colSpan={3}
                     className="px-4 py-4 text-center text-coffee-500"
                   >
                     Belum ada pesanan.
@@ -135,25 +187,22 @@ export default function SellerOrdersPage() {
                 orders.map((order) => (
                   <tr
                     key={order.id_transaksi}
-                    onClick={() => handleViewOrder(order.id_transaksi)}
-                    className="cursor-pointer hover:bg-coffee-50 transition-colors"
+                    className="hover:bg-coffee-50 transition-colors"
                   >
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-coffee-900">
-                      {order.id_transaksi}
+                      {order.id_transaksi.substring(0, 8)}...
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="relative">
                         <select
                           value={order.status_pesanan || "MENUNGGU"}
-                          onChange={(e) => {
-                            e.stopPropagation(); // Prevent row click event
+                          onChange={(e) =>
                             handleStatusChange(
                               order.id_transaksi,
                               e.target.value
-                            );
-                          }}
-                          onClick={(e) => e.stopPropagation()} // Prevent row click event
-                          className={`w-full py-1 px-2 pr-8 text-sm font-semibold rounded-lg appearance-none cursor-pointer ${getStatusColor(
+                            )
+                          }
+                          className={`w-full py-1 px-2 pr-8 text-xs font-bold rounded-lg appearance-none cursor-pointer ${getStatusColor(
                             order.status_pesanan || "MENUNGGU"
                           )}`}
                         >
@@ -176,8 +225,16 @@ export default function SellerOrdersPage() {
                             Menunggu
                           </option>
                         </select>
-                        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none text-white" />
+                        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none text-white" />
                       </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => handleViewOrder(order)}
+                        className="px-3 py-1 bg-coffee-100 text-coffee-700 text-xs font-bold rounded-md hover:bg-coffee-200 transition-colors"
+                      >
+                        Detail
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -207,6 +264,95 @@ export default function SellerOrdersPage() {
           </button>
         </div>
       </div>
+
+      {/* Detail Modal */}
+      {showDetailModal && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-scale-up">
+            <div className="bg-coffee-600 px-6 py-4 flex justify-between items-center text-white">
+              <h3 className="text-lg font-bold">Detail Pesanan</h3>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="p-1 hover:bg-coffee-700 rounded-full"
+              >
+                <ChevronDown className="w-6 h-6 rotate-180" />{" "}
+                {/* Close Icon */}
+              </button>
+            </div>
+
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              <div className="mb-4 text-sm text-gray-600">
+                <p>
+                  <strong>ID:</strong> {selectedOrder.id_transaksi}
+                </p>
+                <p>
+                  <strong>Meja:</strong> {selectedOrder.id_sesi}
+                </p>
+                <p>
+                  <strong>Total:</strong> Rp{" "}
+                  {selectedOrder.total_harga.toLocaleString("id-ID")}
+                </p>
+              </div>
+
+              {loadingDetails ? (
+                <div className="text-center py-8 text-coffee-500">
+                  Memuat detail...
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {orderDetails.map((detail) => (
+                    <div
+                      key={detail.order_line}
+                      className="flex space-x-3 border-b border-gray-100 pb-3 last:border-0"
+                    >
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
+                        {detail.item?.image ? (
+                          <img
+                            src={detail.item.image}
+                            alt={detail.item.nama_item}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-400">
+                            IMG
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <h4 className="font-bold text-gray-900 text-sm">
+                            {detail.item?.nama_item || "Item dihapus"}
+                          </h4>
+                          <span className="text-sm font-semibold text-coffee-600">
+                            x{detail.jumlah_item}
+                          </span>
+                        </div>
+                        {detail.catatan && (
+                          <p className="text-xs text-red-500 italic mt-1">
+                            Note: {detail.catatan}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          Rp {detail.subtotal.toLocaleString("id-ID")}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-gray-50 border-t border-gray-100 text-right">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-4 py-2 bg-coffee-600 text-white rounded-lg font-bold text-sm hover:bg-coffee-700"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

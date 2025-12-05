@@ -41,6 +41,7 @@ export async function POST(request: Request) {
           password: hashedPassword,
           no_hp: phone,
           role: role.toUpperCase(), // Ensure uppercase for ENUM
+          // If needed later: jenis_toko: role === "PENJUAL" ? "Default" : null
         },
       ])
       .select()

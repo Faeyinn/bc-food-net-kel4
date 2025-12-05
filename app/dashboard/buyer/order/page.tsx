@@ -21,7 +21,6 @@ interface MenuItem {
   id_item: string;
   nama_item: string;
   harga_item: number;
-  // Optional fields for UI compatibility
   image?: string;
   description?: string;
   category?: string;
@@ -30,6 +29,16 @@ interface MenuItem {
 interface CartItem extends MenuItem {
   quantity: number;
   notes: string;
+  // Computed client-side for UI display
+  category?: string;
+  image?: string;
+  description?: string;
+}
+
+interface DisplayMenuItem extends MenuItem {
+  category: string;
+  image: string; // Ensure string for display
+  description: string;
 }
 
 export default function BuyerOrderPage() {
@@ -48,7 +57,7 @@ export default function BuyerOrderPage() {
   const [showCart, setShowCart] = useState(false);
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [itemNotes, setItemNotes] = useState<{ [key: string]: string }>({});
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [menuItems, setMenuItems] = useState<DisplayMenuItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState("QRIS");
   const [loading, setLoading] = useState(true);
 
@@ -66,7 +75,7 @@ export default function BuyerOrderPage() {
 
         if (error) throw error;
 
-        // Map and categorize items
+        // Map and categorize items (Client-side logic only)
         const mappedItems = (data || []).map((item: MenuItem) => {
           let category = "Makanan";
           const lowerName = item.nama_item.toLowerCase();
@@ -75,12 +84,14 @@ export default function BuyerOrderPage() {
             lowerName.includes("jus") ||
             lowerName.includes("kopi") ||
             lowerName.includes("teh") ||
-            lowerName.includes("minuman")
+            lowerName.includes("minuman") ||
+            lowerName.includes("air")
           ) {
             category = "Minuman";
           } else if (
             lowerName.includes("kerupuk") ||
-            lowerName.includes("snack")
+            lowerName.includes("snack") ||
+            lowerName.includes("gorengan")
           ) {
             category = "Snack";
           }
@@ -88,8 +99,11 @@ export default function BuyerOrderPage() {
           return {
             ...item,
             category,
-            image: "/api/placeholder/100/100",
-            description: "Menu lezat dari " + (storeName || "toko kami"),
+            // Use existing image or placeholder
+            image: item.image || "/api/placeholder/100/100",
+            description:
+              item.description ||
+              "Menu lezat dari " + (storeName || "toko kami"),
           };
         });
 
@@ -118,7 +132,7 @@ export default function BuyerOrderPage() {
     }));
   };
 
-  const addToCart = (item: MenuItem) => {
+  const addToCart = (item: DisplayMenuItem) => {
     const quantity = quantities[item.id_item] || 0;
     const note = itemNotes[item.id_item] || "";
 
@@ -176,9 +190,20 @@ export default function BuyerOrderPage() {
         .toString()
         .padStart(3, "0");
 
-      // 1. Create Sesi Pemesanan
+      // 1. Insert into Meja (Ensure table exists first)
+      const { error: mejaError } = await supabase.from("meja").upsert({
+        no_meja: tableNumber,
+        status_meja: "TERISI",
+      });
+
+      if (mejaError) {
+        console.error("Error inserting into meja:", mejaError);
+        throw new Error(`Gagal update meja: ${mejaError.message}`);
+      }
+
+      // 2. Create Sesi Pemesanan
       const sessionId = `SES${timestampStr}${randomSuffix}`;
-      const { data: sesiData, error: sesiError } = await supabase
+      const { error: sesiError } = await supabase
         .from("sesi_pemesanan")
         .insert({
           id_sesi: sessionId,
@@ -192,18 +217,6 @@ export default function BuyerOrderPage() {
 
       if (sesiError) throw sesiError;
 
-      // 2. Insert into Meja
-      const { error: mejaError } = await supabase.from("meja").upsert({
-        no_meja: tableNumber,
-        status_meja: "TERISI",
-        id_sesi: sessionId,
-      });
-
-      if (mejaError) {
-        console.error("Error inserting into meja:", mejaError);
-        throw new Error(`Gagal update meja: ${mejaError.message}`);
-      }
-
       // 3. Create Transaksi
       const transactionId = `TRX${timestampStr}${randomSuffix}`;
 
@@ -212,7 +225,7 @@ export default function BuyerOrderPage() {
         dbJenisTransaksi = "TUNAI";
       }
 
-      const { data: trxData, error: trxError } = await supabase
+      const { error: trxError } = await supabase
         .from("transaksi")
         .insert({
           id_transaksi: transactionId,
@@ -258,10 +271,13 @@ export default function BuyerOrderPage() {
 
       setBuyerTransaction(transactionData);
       router.push("/dashboard/buyer/transaction");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Checkout Error:", error);
-      let errorMessage =
-        error?.message || "Terjadi kesalahan saat memproses pesanan.";
+      let errorMessage = "Terjadi kesalahan saat memproses pesanan.";
+
+      if (error && typeof error === "object" && "message" in error) {
+        errorMessage = (error as { message: string }).message;
+      }
 
       if (errorMessage.includes("Could not find the 'catatan' column")) {
         errorMessage =
@@ -361,8 +377,19 @@ export default function BuyerOrderPage() {
               key={item.id_item}
               className="bg-white p-4 rounded-xl shadow-sm flex space-x-4 border border-coffee-50"
             >
-              <div className="w-20 h-20 bg-coffee-100 rounded-lg flex-shrink-0">
-                {/* Image placeholder */}
+              <div className="w-20 h-20 bg-coffee-100 rounded-lg flex-shrink-0 overflow-hidden relative">
+                {item.image && item.image !== "/api/placeholder/100/100" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={item.image}
+                    alt={item.nama_item}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-coffee-400 text-xs text-center p-1">
+                    No Img
+                  </div>
+                )}
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-coffee-900">

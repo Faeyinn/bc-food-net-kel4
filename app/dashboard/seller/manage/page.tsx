@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronRight, ArrowLeft, Plus, Edit, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Modal from "../../../components/ui/Modal";
 import MenuModal, {
   MenuItem as ModalMenuItem,
@@ -19,10 +18,7 @@ interface DBMenuItem {
   nama_item: string;
   harga_item: number;
   id_toko: string;
-  // Optional fields for UI compatibility if we add them to DB later
   image?: string;
-  category?: string;
-  description?: string;
 }
 
 export default function ManageStorePage() {
@@ -59,10 +55,36 @@ export default function ManageStorePage() {
     fetchMenu();
   }, [user]);
 
-  const handleSaveMenu = async (item: ModalMenuItem) => {
+  const handleSaveMenu = async (item: ModalMenuItem, file?: File) => {
     if (!user?.uid) return;
+    setLoading(true);
 
     try {
+      let imageUrl = item.image;
+
+      if (file) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${user.uid}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("menu-items")
+          .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (uploadError) {
+          throw new Error("Gagal mengupload gambar");
+        }
+
+        const { data: publicData } = supabase.storage
+          .from("menu-items")
+          .getPublicUrl(filePath);
+
+        imageUrl = publicData.publicUrl;
+      }
+
       if (editingItem) {
         // Update existing item
         const { error } = await supabase
@@ -70,18 +92,21 @@ export default function ManageStorePage() {
           .update({
             nama_item: item.name,
             harga_item: item.price,
-            // image: item.image, // Assuming we might add this column later
-            // category: item.category,
-            // description: item.description
+            image: imageUrl,
           })
-          .eq("id_item", item.id.toString()); // Assuming id is string in DB (UUID or generated)
+          .eq("id_item", item.id.toString());
 
         if (error) throw error;
 
         setMenuList((prev) =>
           prev.map((menu) =>
             menu.id_item === item.id.toString()
-              ? { ...menu, nama_item: item.name, harga_item: item.price }
+              ? {
+                  ...menu,
+                  nama_item: item.name,
+                  harga_item: item.price,
+                  image: imageUrl,
+                }
               : menu
           )
         );
@@ -97,6 +122,7 @@ export default function ManageStorePage() {
               nama_item: item.name,
               harga_item: item.price,
               id_toko: user.uid,
+              image: imageUrl,
             },
           ])
           .select()
@@ -104,7 +130,13 @@ export default function ManageStorePage() {
 
         if (error) throw error;
 
-        setMenuList((prev) => [...prev, data]);
+        // Merge DB data with local fields for UI since DB might not have them yet
+        const localData = {
+          ...data,
+          image: imageUrl,
+        };
+
+        setMenuList((prev) => [...prev, localData]);
         Swal.fire("Sukses", "Menu berhasil ditambahkan", "success");
       }
       setShowMenuModal(false);
@@ -112,18 +144,18 @@ export default function ManageStorePage() {
     } catch (error) {
       console.error("Error saving menu:", error);
       Swal.fire("Error", "Gagal menyimpan menu", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleEdit = (item: DBMenuItem) => {
     // Map DB item to Modal item
     const modalItem: ModalMenuItem = {
-      id: item.id_item as any, // Cast to any to avoid type conflict if id is string vs number
+      id: item.id_item, // No cast needed now
       name: item.nama_item,
       price: item.harga_item,
-      image: item.image || "/api/placeholder/100/100",
-      category: item.category || "Makanan",
-      description: item.description || "",
+      image: item.image || "",
     };
     setEditingItem(modalItem);
     setShowMenuModal(true);
@@ -166,8 +198,10 @@ export default function ManageStorePage() {
         message={`Apakah Anda yakin ingin menghapus menu "${itemToDelete?.nama_item}"?`}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
+        showConfirm={true}
         confirmText="Hapus"
         cancelText="Batal"
+        type="danger"
       />
 
       {showMenuModal && (
@@ -217,18 +251,23 @@ export default function ManageStorePage() {
               >
                 <div className="flex items-center space-x-3 md:space-x-4 flex-1 overflow-hidden">
                   <div className="w-14 h-14 md:w-16 md:h-16 bg-coffee-100 rounded-lg flex-shrink-0 overflow-hidden relative">
-                    {/* Placeholder image since we don't store images yet */}
-                    <div className="w-full h-full flex items-center justify-center text-coffee-400 text-xs">
-                      No Img
-                    </div>
+                    {item.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.image}
+                        alt={item.nama_item}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-coffee-600 font-bold text-xl">
+                        {item.nama_item.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-bold text-coffee-900 text-sm md:text-base truncate">
                       {item.nama_item}
                     </h3>
-                    <p className="text-xs text-coffee-500 mb-1 truncate">
-                      {item.category || "Makanan"}
-                    </p>
                     <p className="font-bold text-coffee-600 text-sm md:text-base">
                       {formatRupiah(item.harga_item)}
                     </p>

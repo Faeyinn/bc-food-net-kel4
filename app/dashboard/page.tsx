@@ -25,24 +25,13 @@ export default function DashboardPage() {
         router.push("/dashboard/buyer");
       } else if (role === "PENJUAL") {
         router.push("/dashboard/seller");
+      } else if (role === "ADMIN") {
+        router.push("/dashboard/admin");
       }
     }
   }, [user, router]);
 
   if (!user) return null;
-
-  // Check for Admin (Uppercase)
-  if (user.role.toUpperCase() === "ADMIN") {
-    return (
-      <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
-        <Settings className="w-12 h-12 text-purple-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold">Halaman Admin</h2>
-        <p className="text-gray-600">
-          Selamat datang, Admin. Area ini untuk manajemen sistem.
-        </p>
-      </div>
-    );
-  }
 
   // Guest or Default View (if not redirected yet)
   return (

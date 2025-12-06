@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight, ArrowLeft } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "@/app/lib/supabase";
@@ -9,12 +10,10 @@ import Swal from "sweetalert2";
 
 interface Order {
   id_transaksi: string;
-  id_sesi: string; // Used for table number (simplified for now)
+  id_sesi: string;
   status_pesanan: string;
   total_harga: number;
-  // We might need to join with sesi_pemesanan to get table number,
-  // but for now let's assume id_sesi or fetch it separately if needed.
-  // Or we can just show id_transaksi/id_sesi as identifier.
+  no_meja?: string;
 }
 
 interface OrderDetail {
@@ -47,12 +46,33 @@ export default function SellerOrdersPage() {
       try {
         const { data, error } = await supabase
           .from("transaksi")
-          .select("*")
+          .select("*, sesi_pemesanan(no_meja)")
           .eq("id_toko", user.uid)
           .order("tanggal_transaksi", { ascending: false });
 
         if (error) throw error;
-        setOrders(data || []);
+
+        // Map data to handle joined table
+        const mappedOrders = (data || []).map((order) => {
+          // Explicitly cast relevant parts to handle the join type
+          const orderWithJoin = order as Order & {
+            sesi_pemesanan:
+              | { no_meja?: string }
+              | { no_meja?: string }[]
+              | null;
+          };
+
+          const sesi = Array.isArray(orderWithJoin.sesi_pemesanan)
+            ? orderWithJoin.sesi_pemesanan[0]
+            : orderWithJoin.sesi_pemesanan;
+
+          return {
+            ...order,
+            no_meja: sesi?.no_meja || "-",
+          };
+        });
+
+        setOrders(mappedOrders);
       } catch (error) {
         console.error("Error fetching orders:", error);
       } finally {
@@ -286,7 +306,7 @@ export default function SellerOrdersPage() {
                   <strong>ID:</strong> {selectedOrder.id_transaksi}
                 </p>
                 <p>
-                  <strong>Meja:</strong> {selectedOrder.id_sesi}
+                  <strong>Meja:</strong> {selectedOrder.no_meja}
                 </p>
                 <p>
                   <strong>Total:</strong> Rp{" "}
@@ -307,9 +327,11 @@ export default function SellerOrdersPage() {
                     >
                       <div className="w-12 h-12 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
                         {detail.item?.image ? (
-                          <img
+                          <Image
                             src={detail.item.image}
                             alt={detail.item.nama_item}
+                            width={48}
+                            height={48}
                             className="w-full h-full object-cover"
                           />
                         ) : (

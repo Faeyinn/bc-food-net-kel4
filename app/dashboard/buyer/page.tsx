@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "@/app/lib/supabase";
@@ -64,6 +64,15 @@ export default function BuyerHomePage() {
         <p className="text-center text-sm font-medium text-coffee-600 mb-4">
           Promo/Informasi
         </p>
+
+        {/* History Button */}
+        <button
+          onClick={() => router.push("/dashboard/buyer/history")}
+          className="w-full mb-6 py-2 px-4 bg-white border border-coffee-200 text-coffee-700 font-semibold rounded-xl shadow-sm hover:bg-coffee-50 transition-all flex items-center justify-center"
+        >
+          <Clock className="w-4 h-4 mr-2" />
+          Riwayat Pesanan
+        </button>
 
         {/* Table/Time Header */}
         <div className="flex justify-around text-center text-gray-600 text-sm mb-6 space-x-4">

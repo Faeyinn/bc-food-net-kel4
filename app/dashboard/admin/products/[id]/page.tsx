@@ -1,18 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { ChevronRight, ArrowLeft, Plus, Edit, Trash2 } from "lucide-react";
+import React, { useState, useEffect, use } from "react";
+import { ArrowLeft, Plus, Edit, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Modal from "../../../components/ui/Modal";
+import Modal from "../../../../components/ui/Modal";
 import MenuModal, {
   MenuItem as ModalMenuItem,
-} from "../../../components/seller/MenuModal";
-import { formatRupiah } from "../../../utils/format";
-import { useAuth } from "../../../context/AuthContext";
+} from "../../../../components/seller/MenuModal";
+import { formatRupiah } from "../../../../utils/format";
 import { supabase } from "@/app/lib/supabase";
 import Swal from "sweetalert2";
 
-// Interface matching DB schema
 interface DBMenuItem {
   id_item: string;
   nama_item: string;
@@ -22,42 +20,58 @@ interface DBMenuItem {
   category?: string;
 }
 
-export default function ManageStorePage() {
+export default function AdminProductManagePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { id } = use(params);
+  const sellerId = id;
+
   const [menuList, setMenuList] = useState<DBMenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sellerName, setSellerName] = useState("Toko");
 
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [editingItem, setEditingItem] = useState<ModalMenuItem | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<DBMenuItem | null>(null);
 
-  // Fetch Menu Items
+  // Fetch Menu Items & Seller Info
   useEffect(() => {
-    const fetchMenu = async () => {
-      if (!user?.uid) return;
+    const fetchData = async () => {
+      setLoading(true);
       try {
+        // Fetch Seller Name
+        const { data: sellerData } = await supabase
+          .from("users")
+          .select("nama")
+          .eq("id_user", sellerId)
+          .single();
+
+        if (sellerData) setSellerName(sellerData.nama);
+
+        // Fetch Items
         const { data, error } = await supabase
           .from("item")
           .select("*")
-          .eq("id_toko", user.uid);
+          .eq("id_toko", sellerId);
 
         if (error) throw error;
         setMenuList(data || []);
       } catch (error) {
-        console.error("Error fetching menu:", error);
-        Swal.fire("Error", "Gagal memuat menu", "error");
+        console.error("Error fetching data:", error);
+        Swal.fire("Error", "Gagal memuat data toko", "error");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMenu();
-  }, [user]);
+    fetchData();
+  }, [sellerId]);
 
   const handleSaveMenu = async (item: ModalMenuItem, file?: File) => {
-    if (!user?.uid) return;
     setLoading(true);
 
     try {
@@ -65,7 +79,7 @@ export default function ManageStorePage() {
 
       if (file) {
         const fileExt = file.name.split(".").pop();
-        const fileName = `${user.uid}-${Date.now()}.${fileExt}`;
+        const fileName = `${sellerId}-${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -124,7 +138,7 @@ export default function ManageStorePage() {
               id_item: newItemId,
               nama_item: item.name,
               harga_item: item.price,
-              id_toko: user.uid,
+              id_toko: sellerId, // Use sellerId from params
               image: imageUrl,
               category: item.category,
             },
@@ -134,7 +148,7 @@ export default function ManageStorePage() {
 
         if (error) throw error;
 
-        // Merge DB data with local fields for UI since DB might not have them yet
+        // Merge DB data with locally known fields
         const localData = {
           ...data,
           image: imageUrl,
@@ -156,7 +170,7 @@ export default function ManageStorePage() {
   const handleEdit = (item: DBMenuItem) => {
     // Map DB item to Modal item
     const modalItem: ModalMenuItem = {
-      id: item.id_item, // No cast needed now
+      id: item.id_item,
       name: item.nama_item,
       price: item.harga_item,
       image: item.image || "",
@@ -224,10 +238,10 @@ export default function ManageStorePage() {
 
       <div className="bg-white rounded-2xl shadow-xl p-6">
         <p className="text-center text-sm font-medium text-coffee-600 mb-4">
-          Promo/Informasi
+          Kelola Produk
         </p>
-        <h2 className="text-3xl font-bold text-center text-coffee-900 mb-6">
-          KELOLA TOKO
+        <h2 className="text-2xl font-bold text-center text-coffee-900 mb-6">
+          {sellerName}
         </h2>
 
         {/* Add Menu Button */}
@@ -245,9 +259,13 @@ export default function ManageStorePage() {
         {/* Menu List */}
         <div className="space-y-4 mb-8">
           {loading ? (
-            <p className="text-center text-coffee-500">Memuat Menu...</p>
+            <div className="flex justify-center py-8">
+              <div className="w-8 h-8 border-4 border-coffee-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
           ) : menuList.length === 0 ? (
-            <p className="text-center text-coffee-500">Belum ada menu.</p>
+            <div className="text-center py-8 bg-gray-50 rounded-xl border border-gray-100">
+              <p className="text-gray-500">Toko ini belum memiliki menu.</p>
+            </div>
           ) : (
             menuList.map((item) => (
               <div
@@ -299,18 +317,8 @@ export default function ManageStorePage() {
 
         {/* Footer Info & Back Button */}
         <div className="mt-8 text-center">
-          <button className="text-coffee-600 font-semibold hover:text-coffee-700 flex items-center justify-center mx-auto mb-6">
-            Info Selengkapnya <ChevronRight className="w-4 h-4 ml-1" />
-          </button>
-
-          <div className="flex justify-center mb-4 space-x-3">
-            <div className="w-4 h-4 bg-coffee-200 rounded-full"></div>
-            <div className="w-4 h-4 bg-coffee-200 rounded-full"></div>
-            <div className="w-4 h-4 bg-coffee-200 rounded-full"></div>
-          </div>
-
           <button
-            onClick={() => router.push("/dashboard/seller")}
+            onClick={() => router.push("/dashboard/admin/products")}
             className="text-coffee-600 font-semibold hover:text-coffee-800 flex items-center justify-center mx-auto transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />

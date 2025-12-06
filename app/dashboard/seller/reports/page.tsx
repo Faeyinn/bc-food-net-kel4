@@ -3,7 +3,6 @@
 import React from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { mockReportData } from "../../../utils/mockReportData";
 import { useAuth } from "../../../context/AuthContext";
 
 export default function SellerReportsPage() {
@@ -39,7 +38,7 @@ export default function SellerReportsPage() {
 
         {/* Pilihan Periode Laporan */}
         <div className="space-y-4 mb-8">
-          {Object.keys(mockReportData).map((period) => (
+          {["Hari Ini", "Minggu Ini", "Bulan Ini"].map((period) => (
             <button
               key={period}
               onClick={() => handleSelectReport(period)}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
-import { ShoppingBag, MapPin, ScanLine, Download } from "lucide-react";
+import { ShoppingBag, MapPin, Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import Image from "next/image";
 

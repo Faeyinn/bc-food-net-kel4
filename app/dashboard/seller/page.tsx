@@ -13,10 +13,21 @@ export default function SellerHomePage() {
   const [orderCount, setOrderCount] = useState(0);
 
   useEffect(() => {
-    const fetchOrderCount = async () => {
+    const fetchOrderCountAndStatus = async () => {
       if (!user?.uid) return;
 
       try {
+        // Fetch Status
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("is_open")
+          .eq("id_user", user.uid)
+          .single();
+
+        if (userData) {
+          setIsStoreOpen(userData.is_open);
+        }
+
         const { count, error } = await supabase
           .from("transaksi")
           .select("*", { count: "exact", head: true })
@@ -26,12 +37,30 @@ export default function SellerHomePage() {
         if (error) throw error;
         setOrderCount(count || 0);
       } catch (error) {
-        console.error("Error fetching order count:", error);
+        console.error("Error fetching data:", error);
       }
     };
 
-    fetchOrderCount();
+    fetchOrderCountAndStatus();
   }, [user]);
+
+  const toggleStoreStatus = async () => {
+    if (!user?.uid) return;
+    const newStatus = !isStoreOpen;
+    setIsStoreOpen(newStatus); // Optimistic update
+
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ is_open: newStatus })
+        .eq("id_user", user.uid);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating store status", error);
+      setIsStoreOpen(!newStatus); // Revert on error
+    }
+  };
 
   return (
     <div className="max-w-md mx-auto p-4 md:p-0">
@@ -52,7 +81,7 @@ export default function SellerHomePage() {
             <input
               type="checkbox"
               checked={isStoreOpen}
-              onChange={() => setIsStoreOpen(!isStoreOpen)}
+              onChange={toggleStoreStatus}
               className="sr-only peer"
             />
             <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-coffee-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>

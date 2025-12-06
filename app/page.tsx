@@ -101,23 +101,35 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row">
         {/* Left Side - Image/Branding */}
-        <div className="md:w-1/2 bg-coffee-50 p-6 md:p-12 flex flex-col items-center justify-center text-center">
-          <div className="bg-white p-4 rounded-full shadow-lg mb-4 md:mb-6">
-            <ShoppingBag className="w-12 h-12 md:w-16 md:h-16 text-coffee-600" />
-          </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            Business Center
-          </h2>
-          <h3 className="text-lg md:text-xl font-semibold text-coffee-600 mb-4">
-            Food Net
-          </h3>
-          <p className="text-sm md:text-base text-gray-600">
-            Solusi kantin digital modern. Pesan makanan, kelola toko, dan
-            nikmati kemudahan transaksi dalam satu aplikasi.
-          </p>
-          <div className="mt-6 md:mt-8 flex items-center space-x-2 text-gray-500 text-xs md:text-sm">
-            <MapPin className="w-4 h-4" />
-            <span>Universitas Andalas</span>
+        <div
+          className="md:w-1/2 bg-coffee-50 p-6 md:p-12 flex flex-col items-center justify-center text-center relative overflow-hidden"
+          style={{
+            backgroundImage: "url('/yunend.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {/* Overlay for readability */}
+          <div className="absolute inset-0 bg-black/40 z-0"></div>
+
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="bg-white p-4 rounded-full shadow-lg mb-4 md:mb-6">
+              <ShoppingBag className="w-12 h-12 md:w-16 md:h-16 text-coffee-600" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 shadow-sm">
+              Business Center
+            </h2>
+            <h3 className="text-lg md:text-xl font-semibold text-coffee-100 mb-4 shadow-sm">
+              Food Net
+            </h3>
+            <p className="text-sm md:text-base text-gray-100 drop-shadow-md">
+              Solusi kantin digital modern. Pesan makanan, kelola toko, dan
+              nikmati kemudahan transaksi dalam satu aplikasi.
+            </p>
+            <div className="mt-6 md:mt-8 flex items-center space-x-2 text-white/90 text-xs md:text-sm">
+              <MapPin className="w-4 h-4" />
+              <span>Universitas Andalas</span>
+            </div>
           </div>
         </div>
 

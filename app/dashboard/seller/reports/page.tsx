@@ -11,7 +11,7 @@ export default function SellerReportsPage() {
 
   const handleSelectReport = (period: string) => {
     router.push(
-      `/dashboard/seller/reports/detail?period=${encodeURIComponent(period)}`
+      `/dashboard/seller/reports/view?period=${encodeURIComponent(period)}`
     );
   };
 

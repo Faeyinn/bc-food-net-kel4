@@ -30,7 +30,7 @@ export default function AdminLayout({
 
   const handleSignOut = async () => {
     await logout();
-    router.push("/auth/login");
+    router.push("/");
   };
 
   const isActive = (path: string) => pathname === path;

@@ -108,7 +108,6 @@ export default function AdminProductManagePage({
             nama_item: item.name,
             harga_item: item.price,
             image: imageUrl,
-            category: item.category,
           })
           .eq("id_item", item.id.toString());
 
@@ -122,7 +121,6 @@ export default function AdminProductManagePage({
                   nama_item: item.name,
                   harga_item: item.price,
                   image: imageUrl,
-                  category: item.category,
                 }
               : menu
           )
@@ -140,7 +138,6 @@ export default function AdminProductManagePage({
               harga_item: item.price,
               id_toko: sellerId, // Use sellerId from params
               image: imageUrl,
-              category: item.category,
             },
           ])
           .select()

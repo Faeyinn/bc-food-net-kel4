@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
+import { supabase } from "@/app/lib/supabase";
 import {
   Settings,
   ChevronRight,
@@ -11,10 +12,23 @@ import {
   Users,
   ShoppingBag,
 } from "lucide-react";
+import { formatRupiah } from "@/app/utils/format";
+
+interface PopulerItem {
+  id_item: string;
+  nama_item: string;
+  harga_item: number;
+  image?: string;
+  users: {
+    nama: string;
+  } | null; // Join result might be null/array depending on data, but assuming object for single relation
+}
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const [popularItems, setPopularItems] = useState<PopulerItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -30,6 +44,48 @@ export default function DashboardPage() {
       }
     }
   }, [user, router]);
+
+  useEffect(() => {
+    const fetchPopularItems = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("item")
+          .select(
+            `
+            id_item,
+            nama_item,
+            harga_item,
+            image,
+            users (
+              nama
+            )
+          `
+          )
+          .limit(6);
+
+        if (error) throw error;
+
+        // Supabase join returns array or object depending on relation.
+        // Assuming users is a single object here (one-to-many from users to items inverted).
+        // Safely casting or mapping:
+        const formattedData: PopulerItem[] = (data || []).map((item: any) => ({
+          id_item: item.id_item,
+          nama_item: item.nama_item,
+          harga_item: item.harga_item,
+          image: item.image,
+          users: Array.isArray(item.users) ? item.users[0] : item.users,
+        }));
+
+        setPopularItems(formattedData);
+      } catch (error) {
+        console.error("Error fetching popular items:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPopularItems();
+  }, []);
 
   if (!user) return null;
 
@@ -84,45 +140,55 @@ export default function DashboardPage() {
             Lihat Semua <ChevronRight className="w-5 h-5 ml-1" />
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            {
-              name: "Nasi Goreng Special",
-              price: "Rp 12.000",
-              merchant: "Warung Bu Yanti",
-              rating: "4.8",
-            },
-            {
-              name: "Mie Ayam Jumbo",
-              price: "Rp 12.000",
-              merchant: "Mie Ayam Pak Udin",
-              rating: "4.7",
-            },
-            {
-              name: "Es Teh Manis",
-              price: "Rp 5.000",
-              merchant: "Kantin Sentral",
-              rating: "4.9",
-            },
-          ].map((item, index) => (
-            <div
-              key={index}
-              className="bg-gray-50 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer"
-            >
-              <div className="bg-gradient-to-br from-coffee-400 to-coffee-500 h-40 rounded-lg mb-4 flex items-center justify-center">
-                <ShoppingBag className="w-12 h-12 text-white opacity-50" />
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-gray-100 h-32 rounded-xl animate-pulse"
+              ></div>
+            ))}
+          </div>
+        ) : popularItems.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            Belum ada menu populer.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {popularItems.map((item) => (
+              <div
+                key={item.id_item}
+                className="bg-gray-50 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer"
+              >
+                <div className="bg-gradient-to-br from-coffee-400 to-coffee-500 h-40 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                  {item.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.image}
+                      alt={item.nama_item}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <ShoppingBag className="w-12 h-12 text-white opacity-50" />
+                  )}
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-1">
+                  {item.nama_item}
+                </h3>
+                <p className="text-sm text-gray-600 mb-2">
+                  {item.users?.nama || "Unknown Merchant"}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-coffee-600 font-bold">
+                    {formatRupiah(item.harga_item)}
+                  </span>
+                  <span className="text-sm text-yellow-600">⭐ 4.8</span>
+                </div>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-              <p className="text-sm text-gray-600 mb-2">{item.merchant}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-coffee-600 font-bold">{item.price}</span>
-                <span className="text-sm text-yellow-600">
-                  ⭐ {item.rating}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

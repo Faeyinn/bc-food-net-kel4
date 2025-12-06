@@ -13,15 +13,15 @@
 
   --color-coffee-50: #fbf8f6;
   --color-coffee-100: #f5efe9;
-  --color-coffee-200: #ebe0d6;
-  --color-coffee-300: #dcbfae;
-  --color-coffee-400: #c8a38e;
-  --color-coffee-500: #967259;
-  --color-coffee-600: #7c5c46;
-  --color-coffee-700: #624636;
-  --color-coffee-800: #4a3328;
-  --color-coffee-900: #332119;
-  --color-coffee-950: #1c110c;
+  --color-coffee-200: #2d1a0b;
+  --color-coffee-300: #2d1a0b;
+  --color-coffee-400: #2d1a0b;
+  --color-coffee-500: #2d1a0b;
+  --color-coffee-600: #2d1a0b;
+  --color-coffee-700: #2d1a0b;
+  --color-coffee-800: #2d1a0b;
+  --color-coffee-900: #2d1a0b;
+  --color-coffee-950: #2d1a0b;
 }
 
 @media (prefers-color-scheme: dark) {

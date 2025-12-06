@@ -82,14 +82,14 @@ export default function DashboardLayout({
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white mt-12 py-8">
+      <footer className="bg-coffee-800 text-white mt-12 py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <MapPin className="w-5 h-5" />
             <p>Universitas Andalas, Padang, Sumatera Barat</p>
           </div>
           <p className="text-gray-400 text-sm">
-            © 2024 Business Center Food Net. All rights reserved.
+            © 2025 Business Center Food Net. All rights reserved.
           </p>
         </div>
       </footer>

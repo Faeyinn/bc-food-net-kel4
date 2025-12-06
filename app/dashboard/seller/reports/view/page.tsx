@@ -3,6 +3,15 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { formatRupiah } from "../../../../utils/format";
 import { useAuth } from "../../../../context/AuthContext";
 import { supabase } from "@/app/lib/supabase";
@@ -19,6 +28,7 @@ interface ReportData {
   cashRevenue: number;
   qrRevenue: number;
   topItems: TopItem[];
+  chartData: { name: string; value: number }[];
 }
 
 function SellerReportContent() {
@@ -89,6 +99,7 @@ function SellerReportContent() {
             cashRevenue: 0,
             qrRevenue: 0,
             topItems: [],
+            chartData: [],
           });
           setLoading(false);
           return;
@@ -100,6 +111,37 @@ function SellerReportContent() {
         let cashRev = 0;
         let qrRev = 0;
 
+        const chartIds = new Map<string, number>();
+
+        // Initialize chart buckets based on period
+        if (period === "Hari Ini") {
+          for (let i = 0; i < 24; i++) {
+            const hour = i.toString().padStart(2, "0") + ":00";
+            chartIds.set(hour, 0);
+          }
+        } else if (period === "Minggu Ini") {
+          const days = [
+            "Minggu",
+            "Senin",
+            "Selasa",
+            "Rabu",
+            "Kamis",
+            "Jumat",
+            "Sabtu",
+          ];
+          days.forEach((day) => chartIds.set(day, 0));
+        } else {
+          // Bulan Ini - Initialize up to 31 generally, or specific to month length
+          const daysInMonth = new Date(
+            now.getFullYear(),
+            now.getMonth() + 1,
+            0
+          ).getDate();
+          for (let i = 1; i <= daysInMonth; i++) {
+            chartIds.set(i.toString(), 0);
+          }
+        }
+
         transactions.forEach((t) => {
           const amount = t.total_harga || 0;
           totalRev += amount;
@@ -108,7 +150,38 @@ function SellerReportContent() {
           } else {
             qrRev += amount;
           }
+
+          // Populate chart data
+          const date = new Date(t.tanggal_transaksi);
+          let key = "";
+          if (period === "Hari Ini") {
+            key = date.getHours().toString().padStart(2, "0") + ":00";
+          } else if (period === "Minggu Ini") {
+            const days = [
+              "Minggu",
+              "Senin",
+              "Selasa",
+              "Rabu",
+              "Kamis",
+              "Jumat",
+              "Sabtu",
+            ];
+            key = days[date.getDay()];
+          } else {
+            key = date.getDate().toString();
+          }
+
+          if (chartIds.has(key)) {
+            chartIds.set(key, (chartIds.get(key) || 0) + amount);
+          }
         });
+
+        const chartData = Array.from(chartIds.entries()).map(
+          ([name, value]) => ({
+            name,
+            value,
+          })
+        );
 
         // Fetch Order Items for Top Selling
         // We need to fetch items that belong to these transactions
@@ -169,6 +242,7 @@ function SellerReportContent() {
           cashRevenue: cashRev,
           qrRevenue: qrRev,
           topItems,
+          chartData,
         });
       } catch (error) {
         console.error("Error fetching report:", error);
@@ -199,13 +273,54 @@ function SellerReportContent() {
   return (
     <div className="max-w-md mx-auto p-4 md:p-0">
       <div className="bg-white rounded-2xl shadow-xl p-6">
-        <p className="text-center text-sm font-medium text-green-600 mb-4">
+        <p className="text-center text-sm font-medium text-coffee-600 mb-4">
           Promo/Informasi
         </p>
 
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
           REKAP PENJUALAN ({data.period.toUpperCase()})
         </h2>
+
+        {/* Grafik Penjualan */}
+        <div className="h-64 mb-8">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data.chartData}>
+              <defs>
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8B4513" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#8B4513" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 10 }}
+                minTickGap={30} // Prevent overlap on mobile
+                interval={data.period === "Hari Ini" ? 3 : "preserveStartEnd"}
+              />
+              <YAxis
+                tick={{ fontSize: 10 }}
+                tickFormatter={(value) => {
+                  if (value >= 1000000)
+                    return `${(value / 1000000).toFixed(1)}jt`;
+                  if (value >= 1000) return `${(value / 1000).toFixed(0)}rb`;
+                  return value;
+                }}
+              />
+              <Tooltip
+                formatter={(value: number) => formatRupiah(value)}
+                labelStyle={{ color: "black" }}
+              />
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke="#8B4513"
+                fillOpacity={1}
+                fill="url(#colorValue)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
 
         {/* Table Laporan */}
         {data.topItems.length > 0 ? (
@@ -233,7 +348,7 @@ function SellerReportContent() {
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-center text-gray-700">
                       {item.quantity}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-semibold text-green-600">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-semibold text-gray-600">
                       {formatRupiah(item.revenue)}
                     </td>
                   </tr>
@@ -251,7 +366,7 @@ function SellerReportContent() {
         <div className="space-y-2 text-gray-800 mb-8">
           <p className="flex justify-between font-semibold border-b pb-1">
             <span>Total Penjualan</span>{" "}
-            <span className="text-xl font-bold text-green-700">
+            <span className="text-xl font-bold text-gray-700">
               {formatRupiah(data.totalRevenue)}
             </span>
           </p>
@@ -283,7 +398,7 @@ function SellerReportContent() {
 
         {/* Footer Info */}
         <div className="mt-8 text-center">
-          <button className="text-green-600 font-semibold hover:text-green-700 flex items-center justify-center mx-auto mb-6">
+          <button className="text-coffee-600 font-semibold hover:text-green-700 flex items-center justify-center mx-auto mb-6">
             Info Selengkapnya <ChevronRight className="w-4 h-4 ml-1" />
           </button>
 

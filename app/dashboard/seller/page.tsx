@@ -88,17 +88,13 @@ export default function SellerHomePage() {
           </label>
         </div>
 
-        <h2 className="text-2xl font-bold text-center text-coffee-900 mb-8">
-          Menu Utama Penjual
-        </h2>
-
         {/* Menu Grid */}
         <div className="grid grid-cols-1 gap-4">
           <button
             onClick={() => router.push("/dashboard/seller/manage")}
-            className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all group"
+            className="flex items-center p-4 bg-coffee-50 hover:bg-coffee-100 rounded-xl transition-all group"
           >
-            <div className="p-3 bg-blue-100 text-blue-600 rounded-lg group-hover:bg-white transition-colors">
+            <div className="p-3 bg-coffee-100 text-coffee-600 rounded-lg group-hover:bg-white transition-colors">
               <Store className="w-6 h-6" />
             </div>
             <div className="ml-4 text-left flex-1">
@@ -128,9 +124,9 @@ export default function SellerHomePage() {
 
           <button
             onClick={() => router.push("/dashboard/seller/reports")}
-            className="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all group"
+            className="flex items-center p-4 bg-coffee-50 hover:bg-coffee-100 rounded-xl transition-all group"
           >
-            <div className="p-3 bg-purple-100 text-purple-600 rounded-lg group-hover:bg-white transition-colors">
+            <div className="p-3 bg-coffee-100 text-coffee-600 rounded-lg group-hover:bg-white transition-colors">
               <BarChart3 className="w-6 h-6" />
             </div>
             <div className="ml-4 text-left flex-1">

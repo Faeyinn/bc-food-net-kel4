@@ -56,7 +56,7 @@ export default function BuyerTransactionPage() {
     // Header
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("BC Food Center", 40, 10, { align: "center" });
+    doc.text("BC Food Net", 40, 10, { align: "center" });
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.text("Universitas Andalas", 40, 15, { align: "center" });
@@ -208,7 +208,7 @@ export default function BuyerTransactionPage() {
             className="w-full py-3 mb-3 bg-coffee-600 text-white font-bold rounded-xl hover:bg-coffee-700 transition-colors flex items-center justify-center shadow-md"
           >
             <Download className="w-5 h-5 mr-2" />
-            Unduh Struk
+            Simpan Struk
           </button>
           <button
             onClick={() => router.push("/dashboard/buyer")}

@@ -9,6 +9,7 @@ interface UserProfile {
   name: string;
   phone?: string;
   isDemo: boolean;
+  is_open?: boolean;
 }
 
 interface AuthContextType {

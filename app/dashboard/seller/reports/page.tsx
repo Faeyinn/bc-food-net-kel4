@@ -29,13 +29,6 @@ export default function SellerReportsPage() {
           LAPORAN PENJUALAN
         </h2>
 
-        {/* Nama Toko */}
-        <div className="text-center mb-8">
-          <div className="inline-block px-8 py-3 bg-coffee-50 rounded-full font-semibold text-coffee-800 border border-coffee-100">
-            {user?.name || "Nama Toko"}
-          </div>
-        </div>
-
         {/* Pilihan Periode Laporan */}
         <div className="space-y-4 mb-8">
           {["Hari Ini", "Minggu Ini", "Bulan Ini"].map((period) => (

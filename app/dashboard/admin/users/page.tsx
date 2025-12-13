@@ -67,6 +67,13 @@ export default function AdminUsersPage() {
 
         if (error) throw error;
 
+        // Log Activity
+        const deletedUser = users.find((u) => u.id_user === userId);
+        await supabase.from("activity_logs").insert({
+          action: "DELETE_USER",
+          details: `Admin menghapus user: ${deletedUser?.nama || "Unknown"}`,
+        });
+
         setUsers(users.filter((u) => u.id_user !== userId));
         Swal.fire("Terhapus!", "User telah dihapus.", "success");
       } catch (error) {
@@ -132,13 +139,13 @@ export default function AdminUsersPage() {
             <input
               type="text"
               placeholder="Cari user..."
-              className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 w-full md:w-64"
+              className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 w-full md:w-64 text-gray-600"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <select
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-600"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
           >
@@ -274,7 +281,7 @@ export default function AdminUsersPage() {
                 </label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-600"
                   value={editForm.nama}
                   onChange={(e) =>
                     setEditForm({ ...editForm, nama: e.target.value })
@@ -287,7 +294,7 @@ export default function AdminUsersPage() {
                   Role
                 </label>
                 <select
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-600"
                   value={editForm.role}
                   onChange={(e) =>
                     setEditForm({ ...editForm, role: e.target.value })

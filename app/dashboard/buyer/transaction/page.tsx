@@ -193,7 +193,7 @@ export default function BuyerTransactionPage() {
 
           <div className="border-t border-gray-200 pt-4">
             <div className="flex justify-between items-center text-lg font-bold">
-              <span>Total Bayar</span>
+              <span className="text-coffee-600">Total Bayar</span>
               <span className="text-coffee-600">
                 {formatRupiah(totalAmount)}
               </span>

@@ -158,18 +158,12 @@ export default function SellerOrdersPage() {
   return (
     <div className="max-w-md mx-auto p-4 md:p-0">
       <div className="bg-white rounded-2xl shadow-xl p-6">
-        <p className="text-center text-sm font-medium text-coffee-600 mb-4">
-          Promo/Informasi
-        </p>
-        <h2 className="text-3xl font-bold text-center text-coffee-900">
+        <h2 className="text-3xl titan-one text-center text-coffee-900">
           PESANAN PELANGGAN
         </h2>
-        <p className="text-lg font-semibold text-center text-coffee-700 mb-6">
-          {user?.name || "Toko Anda"}
-        </p>
 
         {/* Order List Table */}
-        <div className="overflow-x-auto border border-coffee-200 rounded-xl mb-6">
+        <div className="overflow-x-auto border border-coffee-200 rounded-xl mt-4 mb-6">
           <table className="min-w-full divide-y divide-coffee-200">
             <thead className="bg-coffee-50">
               <tr>

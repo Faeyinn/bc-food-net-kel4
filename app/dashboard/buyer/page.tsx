@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronRight, Clock } from "lucide-react";
+import { ChevronRight, Clock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "@/app/lib/supabase";
 import Swal from "sweetalert2";
+import Image from "next/image";
 
 interface Store {
   id_user: string;
   nama: string;
+  is_open: boolean;
 }
 
 export default function BuyerHomePage() {
@@ -18,13 +20,14 @@ export default function BuyerHomePage() {
   const [tableNumber, setTableNumber] = useState("");
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPromo, setShowPromo] = useState(true);
 
   useEffect(() => {
     const fetchStores = async () => {
       try {
         const { data, error } = await supabase
           .from("users")
-          .select("id_user, nama")
+          .select("id_user, nama, is_open")
           .eq("role", "PENJUAL");
 
         if (error) throw error;
@@ -40,6 +43,16 @@ export default function BuyerHomePage() {
   }, []);
 
   const handleSelectStore = (store: Store) => {
+    if (!store.is_open) {
+      Swal.fire({
+        icon: "error",
+        title: "Toko Tutup",
+        text: "Maaf, toko ini sedang tutup.",
+        confirmButtonColor: "#8d6e63",
+      });
+      return;
+    }
+
     if (!tableNumber) {
       Swal.fire({
         icon: "warning",
@@ -60,6 +73,32 @@ export default function BuyerHomePage() {
 
   return (
     <div className="max-w-md mx-auto p-4 md:p-0">
+      {/* Promo Popup */}
+      {showPromo && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowPromo(false)}
+          />
+          <div className="relative bg-white rounded-2xl overflow-hidden w-full max-w-lg shadow-2xl animate-scale-up">
+            <button
+              onClick={() => setShowPromo(false)}
+              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg z-10 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="relative w-full aspect-video">
+              <Image
+                src="/grand-launching.jpg"
+                alt="Grand Launching"
+                fill
+                className="object-cover"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl shadow-xl p-6">
         <p className="text-center text-sm font-medium text-coffee-600 mb-4">
           Promo/Informasi
@@ -101,9 +140,20 @@ export default function BuyerHomePage() {
               <button
                 key={store.id_user}
                 onClick={() => handleSelectStore(store)}
-                className="w-full py-4 bg-coffee-50 hover:bg-coffee-100 text-coffee-900 font-semibold rounded-xl transition-all shadow-sm hover:shadow-md border border-coffee-100"
+                className={`w-full py-4 px-6 flex justify-between items-center bg-coffee-50 hover:bg-coffee-100 text-coffee-900 font-semibold rounded-xl transition-all shadow-sm hover:shadow-md border border-coffee-100 ${
+                  !store.is_open ? "opacity-75 grayscale" : ""
+                }`}
               >
-                {store.nama}
+                <span>{store.nama}</span>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    store.is_open
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {store.is_open ? "Buka" : "Tutup"}
+                </span>
               </button>
             ))
           )}

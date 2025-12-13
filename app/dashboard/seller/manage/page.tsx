@@ -229,10 +229,7 @@ export default function ManageStorePage() {
       )}
 
       <div className="bg-white rounded-2xl shadow-xl p-6">
-        <p className="text-center text-sm font-medium text-coffee-600 mb-4">
-          Promo/Informasi
-        </p>
-        <h2 className="text-3xl font-bold text-center text-coffee-900 mb-6">
+        <h2 className="text-3xl titan-one text-center text-coffee-900 mb-6">
           KELOLA TOKO
         </h2>
 
@@ -305,13 +302,6 @@ export default function ManageStorePage() {
 
         {/* Footer Info & Back Button */}
         <div className="mt-8 text-center">
-          <button
-            onClick={() => router.push("/info-bc")}
-            className="text-coffee-600 font-semibold hover:text-coffee-700 flex items-center justify-center mx-auto mb-6"
-          >
-            Info Selengkapnya <ChevronRight className="w-4 h-4 ml-1" />
-          </button>
-
           <div className="flex justify-center mb-4 space-x-3">
             <div className="w-4 h-4 bg-coffee-200 rounded-full"></div>
             <div className="w-4 h-4 bg-coffee-200 rounded-full"></div>

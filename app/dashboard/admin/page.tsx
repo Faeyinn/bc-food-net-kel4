@@ -4,16 +4,26 @@ import React, { useEffect, useState } from "react";
 import { Users, Store, Package, TrendingUp } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
 
+// Add Interface
+interface ActivityLog {
+  id: string;
+  action: string;
+  details: string;
+  created_at: string;
+  type: "LOG" | "USER_REGISTER";
+}
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
     users: 0,
     sellers: 0,
     products: 0,
   });
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchStatsAndActivities = async () => {
       try {
         // Fetch User Count
         const { count: userCount, error: userError } = await supabase
@@ -31,17 +41,63 @@ export default function AdminDashboardPage() {
           .from("item")
           .select("*", { count: "exact", head: true });
 
+        // Fetch Activity Logs
+        const { data: logs, error: logsError } = await supabase
+          .from("activity_logs")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        // Fetch Recent Registrations
+        const { data: newUsers, error: newUsersError } = await supabase
+          .from("users")
+          .select("id_user, nama, role, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5);
+
         if (userError) console.error("Error fetching user count", userError);
         if (sellerError)
           console.error("Error fetching seller count", sellerError);
         if (productError)
           console.error("Error fetching product count", productError);
+        if (logsError) console.error("Error fetching activity logs", logsError);
+        if (newUsersError)
+          console.error("Error fetching new users", newUsersError);
 
         setStats({
           users: userCount || 0,
           sellers: sellerCount || 0,
           products: productCount || 0,
         });
+
+        // Combine and Sort Activities
+        const formattedLogs: ActivityLog[] = (logs || []).map((log: any) => ({
+          id: log.id,
+          action: log.action,
+          details: log.details,
+          created_at: log.created_at,
+          type: "LOG",
+        }));
+
+        const formattedUsers: ActivityLog[] = (newUsers || []).map(
+          (user: any) => ({
+            id: user.id_user,
+            action: "USER_REGISTER",
+            details: `User baru mendaftar: ${user.nama} (${user.role})`,
+            created_at: user.created_at,
+            type: "USER_REGISTER",
+          })
+        );
+
+        const combined = [...formattedLogs, ...formattedUsers]
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          )
+          .slice(0, 10);
+
+        setActivities(combined);
       } catch (error) {
         console.error("Error fetching stats:", error);
       } finally {
@@ -49,14 +105,14 @@ export default function AdminDashboardPage() {
       }
     };
 
-    fetchStats();
+    fetchStatsAndActivities();
   }, []);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl titan-one text-gray-900">
             Dashboard Overview
           </h2>
           <p className="text-gray-500">Selamat datang kembali, Admin.</p>
@@ -120,11 +176,48 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Quick Actions or Recent Activity could go here */}
+      {/* Activity Feed */}
       <div className="mt-8">
-        <h3 className="font-bold text-gray-900 mb-4">Aktivitas Terkini</h3>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-          <p className="text-gray-400">Belum ada aktivitas tercatat.</p>
+        <h3 className="font-bold text-gray-900 mb-4 titan-one text-xl">
+          Aktivitas Terkini
+        </h3>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          {activities.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-400">Belum ada aktivitas tercatat.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {activities.map((activity) => (
+                <div
+                  key={activity.id + activity.created_at}
+                  className="flex items-start"
+                >
+                  <div
+                    className={`mt-1 w-2 h-2 rounded-full ${
+                      activity.type === "USER_REGISTER"
+                        ? "bg-green-500"
+                        : "bg-blue-500"
+                    } mr-4`}
+                  ></div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">
+                      {activity.details}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(activity.created_at).toLocaleString("id-ID", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Titan+One&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -40,4 +41,10 @@ body {
   background-repeat: no-repeat;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.titan-one {
+  font-family: "Titan One", sans-serif;
+  font-weight: 500;
+  font-style: normal;
 }

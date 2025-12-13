@@ -113,6 +113,12 @@ export default function AdminProductManagePage({
 
         if (error) throw error;
 
+        // Log Activity
+        await supabase.from("activity_logs").insert({
+          action: "UPDATE_MENU",
+          details: `Admin memperbarui menu: ${item.name} di toko ${sellerName}`,
+        });
+
         setMenuList((prev) =>
           prev.map((menu) =>
             menu.id_item === item.id.toString()
@@ -144,6 +150,12 @@ export default function AdminProductManagePage({
           .single();
 
         if (error) throw error;
+
+        // Log Activity
+        await supabase.from("activity_logs").insert({
+          action: "ADD_MENU",
+          details: `Admin menambahkan menu: ${item.name} di toko ${sellerName}`,
+        });
 
         // Merge DB data with locally known fields
         const localData = {
@@ -191,6 +203,12 @@ export default function AdminProductManagePage({
           .eq("id_item", itemToDelete.id_item);
 
         if (error) throw error;
+
+        // Log Activity
+        await supabase.from("activity_logs").insert({
+          action: "DELETE_MENU",
+          details: `Admin menghapus menu: ${itemToDelete.nama_item} dari toko ${sellerName}`,
+        });
 
         setMenuList((prev) =>
           prev.filter((item) => item.id_item !== itemToDelete.id_item)

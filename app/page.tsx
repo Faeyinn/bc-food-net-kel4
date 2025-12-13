@@ -216,7 +216,7 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
-      <div className="absolute bottom-4 text-center z-10">
+      <div className="absolute bottom-4 text-center mt-4 z-10">
         <p className="text-white font-bold text-xs md:text-sm">
           © 2025 BC UNAND
         </p>

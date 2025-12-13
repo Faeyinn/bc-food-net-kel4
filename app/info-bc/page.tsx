@@ -39,9 +39,6 @@ export default function InfoBCPage() {
         <div className="p-6 space-y-8">
           {/* About Section */}
           <section>
-            <h2 className="text-xl font-bold text-coffee-800 mb-4 border-b border-gray-100 pb-2">
-              Tentang Kami
-            </h2>
             <p className="text-gray-600 leading-relaxed text-sm md:text-base text-justify">
               Business Center Universitas Andalas adalah sebuah tempat pusat
               kegiatan kuliner utama bagi mahasiswa di lingkungan Universitas
@@ -57,6 +54,9 @@ export default function InfoBCPage() {
               Unand itu sendiri.
               <br />
               <br />
+              <h2 className="text-xl font-bold text-coffee-800 mb-4 border-b border-gray-100 pb-2">
+                Tentang Kami
+              </h2>
               Website BC FOOD NET dikembangkan oleh NEXADEV STUDIO (Kelompok 4)
               sebagai bagian dari project mata kuliah Rekayasa Perangkat Lunak.
             </p>
@@ -64,7 +64,7 @@ export default function InfoBCPage() {
 
           {/* Team Section */}
           <section>
-            <h2 className="text-xl font-bold text-coffee-800 mb-4 border-b border-gray-100 pb-2">
+            <h2 className="text-lg font-bold text-coffee-800 mb-4 border-b border-gray-100 pb-2">
               Anggota Kelompok
             </h2>
             <ul className="space-y-2">

@@ -199,10 +199,6 @@ export default function SellerReportDetailPage() {
   return (
     <div className="max-w-md mx-auto p-4 md:p-0">
       <div className="bg-white rounded-2xl shadow-xl p-6">
-        <p className="text-center text-sm font-medium text-green-600 mb-4">
-          Promo/Informasi
-        </p>
-
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
           REKAP PENJUALAN ({data.period.toUpperCase()})
         </h2>

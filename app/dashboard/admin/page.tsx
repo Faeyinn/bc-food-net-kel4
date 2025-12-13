@@ -81,20 +81,20 @@ export default function AdminDashboardPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white transform hover:-translate-y-1 transition-all cursor-pointer">
+          <div className="bg-[#faf6ae] p-6 rounded-2xl shadow-lg text-gray-800 transform hover:-translate-y-1 transition-all cursor-pointer">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white/20 rounded-xl">
-                <Users className="w-6 h-6 text-white" />
+              <div className="p-3 bg-gray-800/20 rounded-xl">
+                <Users className="w-6 h-6 text-gray-800" />
               </div>
-              <span className="text-xs font-semibold bg-white/20 px-2 py-1 rounded-full flex items-center">
+              <span className="text-xs font-semibold bg-gray-800/20 px-2 py-1 rounded-full flex items-center">
                 <TrendingUp className="w-3 h-3 mr-1" /> Active
               </span>
             </div>
-            <h3 className="text-blue-100 text-sm font-medium">Total Users</h3>
+            <h3 className="text-gray-800 text-sm font-medium">Total Users</h3>
             <p className="text-3xl font-bold mt-1">{stats.users}</p>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-2xl shadow-lg text-white transform hover:-translate-y-1 transition-all cursor-pointer">
+          <div className="bg-[#71635e] p-6 rounded-2xl shadow-lg text-white transform hover:-translate-y-1 transition-all cursor-pointer">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-white/20 rounded-xl">
                 <Store className="w-6 h-6 text-white" />

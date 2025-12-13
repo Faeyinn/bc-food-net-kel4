@@ -265,9 +265,6 @@ export default function SellerOrdersPage() {
 
         {/* Footer Info & Back Button */}
         <div className="mt-8 text-center">
-          <button className="text-coffee-600 font-semibold hover:text-coffee-700 flex items-center justify-center mx-auto mb-6">
-            Info Selengkapnya <ChevronRight className="w-4 h-4 ml-1" />
-          </button>
 
           <div className="flex justify-center mb-4 space-x-3">
             <div className="w-4 h-4 bg-coffee-200 rounded-full"></div>

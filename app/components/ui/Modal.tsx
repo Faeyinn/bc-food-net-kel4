@@ -54,7 +54,7 @@ const Modal: React.FC<ModalProps> = ({
             </button>
           </div>
 
-          <p className="text-gray-600 mb-8 leading-relaxed ml-1">{message}</p>
+          <p className="text-gray-800 mb-8 leading-relaxed ml-1">{message}</p>
 
           <div className="flex justify-end space-x-3">
             <button

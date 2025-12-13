@@ -44,7 +44,10 @@ export default function SellerReportsPage() {
 
         {/* Footer Info & Back Button */}
         <div className="mt-8 text-center">
-          <button className="text-coffee-600 font-semibold hover:text-coffee-700 flex items-center justify-center mx-auto mb-6">
+          <button
+            onClick={() => router.push("/info-bc")}
+            className="text-coffee-600 font-semibold hover:text-coffee-700 flex items-center justify-center mx-auto mb-6"
+          >
             Info Selengkapnya <ChevronRight className="w-4 h-4 ml-1" />
           </button>
 

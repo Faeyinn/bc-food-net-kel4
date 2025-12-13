@@ -11,14 +11,13 @@ const LoginPage = () => {
   const { user, login, register } = useAuth();
 
   const [showRegister, setShowRegister] = useState(false);
-  // Role is now handled automatically (default Pembeli for register, checked on login)
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     name: "",
     phone: "",
-    role: "Pembeli", // Default role
+    role: "Pembeli",
   });
 
   useEffect(() => {
@@ -98,20 +97,18 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: "url('/yunend.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="absolute inset-0 bg-black/50"></div>
+      <div className="relative z-10 w-full max-w-4xl overflow-hidden flex flex-col md:flex-row rounded-2xl shadow-2xl">
         {/* Left Side - Image/Branding */}
-        <div
-          className="md:w-1/2 bg-coffee-50 p-6 md:p-12 flex flex-col items-center justify-center text-center relative overflow-hidden"
-          style={{
-            backgroundImage: "url('/yunend.jpg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          {/* Overlay for readability */}
-          <div className="absolute inset-0 bg-black/40 z-0"></div>
-
+        <div className="md:w-1/2 p-6 md:p-12 flex flex-col items-center justify-center text-center relative overflow-hidden">
           <div className="relative z-10 flex flex-col items-center">
             <div className="bg-white p-4 rounded-full shadow-lg mb-4 md:mb-6">
               <ShoppingBag className="w-12 h-12 md:w-16 md:h-16 text-coffee-600" />
@@ -134,12 +131,12 @@ const LoginPage = () => {
         </div>
 
         {/* Right Side - Login/Register Form */}
-        <div className="md:w-1/2 p-6 md:p-12">
+        <div className="md:w-1/2 p-6 md:p-12 bg-black/30 backdrop-blur-sm">
           <div className="text-center mb-6 md:mb-8">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+            <h2 className="text-xl md:text-2xl font-bold text-white">
               {showRegister ? "Daftar Akun Baru" : "Selamat Datang Kembali"}
             </h2>
-            <p className="text-gray-500 text-xs md:text-sm mt-1">
+            <p className="text-white text-xs md:text-sm mt-1">
               {showRegister
                 ? "Lengkapi data diri Anda untuk memulai"
                 : "Silakan masuk ke akun Anda"}
@@ -150,51 +147,51 @@ const LoginPage = () => {
             {showRegister && (
               <>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" />
                   <input
                     type="text"
                     name="name"
                     placeholder="Nama Lengkap"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-gray-800 border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl text-white border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base"
                   />
                 </div>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" />
                   <input
                     type="tel"
                     name="phone"
                     placeholder="Nomor Telepon"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-gray-800 border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl text-white border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base"
                   />
                 </div>
               </>
             )}
 
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" />
               <input
                 type="email"
                 name="email"
                 placeholder="Email Address"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border text-gray-800 border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base"
+                className="w-full pl-10 pr-4 py-3 rounded-xl border bg-transparent text-white border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base placeholder:text-gray-300"
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" />
               <input
                 type="password"
                 name="password"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 rounded-xl text-gray-800 border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-transparent text-white border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base placeholder:text-gray-300"
               />
             </div>
 
@@ -207,17 +204,25 @@ const LoginPage = () => {
           </div>
 
           <div className="mt-8 text-center">
-            <p className="text-gray-600 text-sm md:text-base">
+            <p className="text-white text-sm md:text-base">
               {showRegister ? "Sudah punya akun?" : "Belum punya akun?"}
               <button
                 onClick={() => setShowRegister(!showRegister)}
-                className="ml-2 text-coffee-600 font-bold hover:underline focus:outline-none"
+                className="ml-2 text-white font-bold hover:underline focus:outline-none"
               >
-                {showRegister ? "Login" : "Daftar"}
+                {showRegister ? "Login Disini" : "Daftar Disini"}
               </button>
             </p>
           </div>
         </div>
+      </div>
+      <div className="absolute bottom-4 text-center z-10">
+        <p className="text-white font-bold text-xs md:text-sm">
+          © 2025 BC UNAND
+        </p>
+        <p className="text-white/70 text-xs">
+          Developed by NEXADEV STUDIO — Kelompok 4
+        </p>
       </div>
     </div>
   );

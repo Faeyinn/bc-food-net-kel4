@@ -408,7 +408,7 @@ export default function BuyerOrderPage() {
                   onChange={(e) =>
                     handleNoteChange(item.id_item, e.target.value)
                   }
-                  className="w-full mt-2 px-2 py-1 text-xs border border-coffee-200 rounded-lg focus:outline-none focus:border-coffee-500 bg-coffee-50/50"
+                  className="w-full mt-2 px-2 py-1 text-xs text-coffee-600 border border-coffee-200 rounded-lg focus:outline-none focus:border-coffee-500 bg-coffee-50/50"
                 />
               </div>
               <div className="flex flex-col items-end justify-between">

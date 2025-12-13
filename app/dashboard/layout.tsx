@@ -84,12 +84,9 @@ export default function DashboardLayout({
       {/* Footer */}
       <footer className="bg-coffee-800 text-white mt-12 py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <MapPin className="w-5 h-5" />
-            <p>Universitas Andalas, Padang, Sumatera Barat</p>
-          </div>
-          <p className="text-gray-400 text-sm">
-            © 2025 Business Center Food Net. All rights reserved.
+          <p className="font-bold mb-1">© 2025 BC UNAND</p>
+          <p className="text-white text-sm">
+            Developed by NEXADEV STUDIO — Kelompok 4
           </p>
         </div>
       </footer>

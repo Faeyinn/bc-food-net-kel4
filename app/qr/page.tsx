@@ -12,9 +12,9 @@ export default function QRPage() {
     if (cardRef.current) {
       try {
         const canvas = await html2canvas(cardRef.current, {
-          backgroundColor: null, // Transparent background if possible, or capture the background
-          scale: 2, // Better resolution
-          useCORS: true, // For images
+          backgroundColor: null,
+          scale: 2,
+          useCORS: true,
         });
         const link = document.createElement("a");
         link.download = "bcfoodnet-qr.png";

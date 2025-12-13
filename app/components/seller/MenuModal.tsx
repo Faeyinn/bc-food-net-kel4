@@ -161,7 +161,7 @@ const MenuModal: React.FC<MenuModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Nama Menu */}
               <div className="col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-semibold text-gray-600 mb-1.5">
                   Nama Menu <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -170,7 +170,7 @@ const MenuModal: React.FC<MenuModalProps> = ({
                   placeholder="Contoh: Nasi Goreng Spesial"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2.5 rounded-xl border ${
+                  className={`w-full px-4 py-2.5 rounded-xl border text-gray-600 ${
                     errors.name
                       ? "border-red-500 focus:ring-red-200"
                       : "border-gray-300 focus:ring-coffee-500 focus:border-coffee-500"
@@ -185,7 +185,7 @@ const MenuModal: React.FC<MenuModalProps> = ({
 
               {/* Harga */}
               <div className="col-span-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-semibold text-gray-600 mb-1.5">
                   Harga <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -198,7 +198,7 @@ const MenuModal: React.FC<MenuModalProps> = ({
                     placeholder="0"
                     value={formData.price}
                     onChange={handleChange}
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-gray-600 ${
                       errors.price
                         ? "border-red-500 focus:ring-red-200"
                         : "border-gray-300 focus:ring-coffee-500 focus:border-coffee-500"
@@ -214,7 +214,7 @@ const MenuModal: React.FC<MenuModalProps> = ({
 
               {/* Kategori */}
               <div className="col-span-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-semibold text-gray-600 mb-1.5">
                   Kategori
                 </label>
                 <div className="relative">
@@ -222,7 +222,7 @@ const MenuModal: React.FC<MenuModalProps> = ({
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none appearance-none bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none appearance-none bg-white cursor-pointer hover:bg-gray-50 transition-colors text-gray-800"
                   >
                     {CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>

@@ -397,11 +397,7 @@ function SellerReportContent() {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-8 text-center">
-          <button className="text-coffee-600 font-semibold hover:text-green-700 flex items-center justify-center mx-auto mb-6">
-            Info Selengkapnya <ChevronRight className="w-4 h-4 ml-1" />
-          </button>
-
+        <div className="mt-12 text-center">
           <div className="flex justify-center mb-4 space-x-3">
             <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
             <div className="w-4 h-4 bg-gray-300 rounded-full"></div>

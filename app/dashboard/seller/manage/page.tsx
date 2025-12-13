@@ -171,6 +171,15 @@ export default function ManageStorePage() {
   const confirmDelete = async () => {
     if (itemToDelete) {
       try {
+        // 1. Delete related records in antrian_order first (Cascading Delete)
+        const { error: antrianError } = await supabase
+          .from("antrian_order")
+          .delete()
+          .eq("id_item", itemToDelete.id_item);
+
+        if (antrianError) throw antrianError;
+
+        // 2. Delete the item
         const { error } = await supabase
           .from("item")
           .delete()
@@ -296,7 +305,10 @@ export default function ManageStorePage() {
 
         {/* Footer Info & Back Button */}
         <div className="mt-8 text-center">
-          <button className="text-coffee-600 font-semibold hover:text-coffee-700 flex items-center justify-center mx-auto mb-6">
+          <button
+            onClick={() => router.push("/info-bc")}
+            className="text-coffee-600 font-semibold hover:text-coffee-700 flex items-center justify-center mx-auto mb-6"
+          >
             Info Selengkapnya <ChevronRight className="w-4 h-4 ml-1" />
           </button>
 

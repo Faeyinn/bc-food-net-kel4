@@ -20,7 +20,16 @@ export default function BuyerHomePage() {
   const [tableNumber, setTableNumber] = useState("");
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showPromo, setShowPromo] = useState(true);
+  const [showPromo, setShowPromo] = useState(false);
+
+  useEffect(() => {
+    // Check if promo has already been shown in this session
+    const hasShownPromo = sessionStorage.getItem("hasShownPromo");
+    if (!hasShownPromo) {
+      setShowPromo(true);
+      sessionStorage.setItem("hasShownPromo", "true");
+    }
+  }, []);
 
   const handleTableNumberChange = (value: string) => {
     // Only allow numbers

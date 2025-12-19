@@ -94,6 +94,7 @@ export default function ManageStorePage() {
             nama_item: item.name,
             harga_item: item.price,
             image: imageUrl,
+            category: item.category,
           })
           .eq("id_item", item.id.toString());
 
@@ -124,6 +125,7 @@ export default function ManageStorePage() {
               harga_item: item.price,
               id_toko: user.uid,
               image: imageUrl,
+              category: item.category,
             },
           ])
           .select()
@@ -142,9 +144,20 @@ export default function ManageStorePage() {
       }
       setShowMenuModal(false);
       setEditingItem(null);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error saving menu:", error);
-      Swal.fire("Error", "Gagal menyimpan menu", "error");
+      let errorMessage = "Gagal menyimpan menu";
+
+      const err = error as { message?: string };
+      if (
+        err.message?.includes("category") &&
+        err.message?.includes("column")
+      ) {
+        errorMessage =
+          "Kolom 'category' tidak ditemukan di database. Silakan tambahkan kolom 'category' (text) ke tabel 'item' di Supabase.";
+      }
+
+      Swal.fire("Error", errorMessage, "error");
     } finally {
       setLoading(false);
     }

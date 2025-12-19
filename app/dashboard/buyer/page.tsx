@@ -22,6 +22,28 @@ export default function BuyerHomePage() {
   const [loading, setLoading] = useState(true);
   const [showPromo, setShowPromo] = useState(true);
 
+  const handleTableNumberChange = (value: string) => {
+    // Only allow numbers
+    if (value !== "" && !/^\d+$/.test(value)) return;
+
+    if (value !== "") {
+      const num = parseInt(value);
+      if (num < 1 || num > 30) {
+        Swal.fire({
+          toast: true,
+          position: "top",
+          icon: "error",
+          title: "Meja hanya tersedia dari 1 sampai 30",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+        return;
+      }
+    }
+    setTableNumber(value);
+  };
+
   useEffect(() => {
     const fetchStores = async () => {
       try {
@@ -100,14 +122,10 @@ export default function BuyerHomePage() {
       )}
 
       <div className="bg-white rounded-2xl shadow-xl p-6">
-        <p className="text-center text-sm font-medium text-coffee-600 mb-4">
-          Promo/Informasi
-        </p>
-
         {/* History Button */}
         <button
           onClick={() => router.push("/dashboard/buyer/history")}
-          className="w-full mb-6 py-2 px-4 bg-white border border-coffee-200 text-coffee-700 font-semibold rounded-xl shadow-sm hover:bg-coffee-50 transition-all flex items-center justify-center"
+          className="w-full mt-4 mb-6 py-2 px-4 bg-white border border-coffee-200 text-coffee-700 font-semibold rounded-xl shadow-sm hover:bg-coffee-50 transition-all flex items-center justify-center"
         >
           <Clock className="w-4 h-4 mr-2" />
           Riwayat Pesanan
@@ -121,13 +139,13 @@ export default function BuyerHomePage() {
               type="text"
               placeholder=""
               value={tableNumber}
-              onChange={(e) => setTableNumber(e.target.value)}
+              onChange={(e) => handleTableNumberChange(e.target.value)}
               className="w-full px-1 py-1 text-base text-center bg-transparent border-b border-coffee-300 focus:border-coffee-600 outline-none font-bold text-coffee-900"
             />
           </div>
         </div>
 
-        <h3 className="text-lg font-semibold text-center text-coffee-800 mb-6 border-b border-coffee-100 pb-4">
+        <h3 className="text-lg titan-one-100 font-semibold text-center text-coffee-800 mb-6 border-b border-coffee-100 pb-4">
           Mau makan dimana hari ini ?
         </h3>
 

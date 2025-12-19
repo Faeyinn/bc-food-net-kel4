@@ -60,8 +60,14 @@ export default function BuyerOrderPage() {
   const [menuItems, setMenuItems] = useState<DisplayMenuItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState("QRIS");
   const [loading, setLoading] = useState(true);
+  const [showQRModal, setShowQRModal] = useState(false);
 
-  const categories = ["Semua", "Makanan", "Minuman", "Snack"];
+  const [categories, setCategories] = useState([
+    "Semua",
+    "Makanan",
+    "Minuman",
+    "Snack",
+  ]);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -75,8 +81,21 @@ export default function BuyerOrderPage() {
 
         if (error) throw error;
 
-        // Map and categorize items (Client-side logic only)
+        // Map and categorize items
         const mappedItems = (data || []).map((item: MenuItem) => {
+          // If category exists in DB, use it
+          if (item.category) {
+            return {
+              ...item,
+              category: item.category,
+              image: item.image || "/api/placeholder/100/100",
+              description:
+                item.description ||
+                "Menu lezat dari " + (storeName || "toko kami"),
+            };
+          }
+
+          // Fallback to name-based categorization if missing in DB
           let category = "Makanan";
           const lowerName = item.nama_item.toLowerCase();
           if (
@@ -99,7 +118,6 @@ export default function BuyerOrderPage() {
           return {
             ...item,
             category,
-            // Use existing image or placeholder
             image: item.image || "/api/placeholder/100/100",
             description:
               item.description ||
@@ -107,6 +125,20 @@ export default function BuyerOrderPage() {
           };
         });
 
+        // Update categories list based on items found
+        const uniqueCategories = Array.from(
+          new Set(mappedItems.map((item) => item.category))
+        );
+        const defaultCategories = ["Semua", "Makanan", "Minuman", "Snack"];
+        const combinedCategories = [
+          "Semua",
+          ...new Set([
+            ...defaultCategories.filter((c) => c !== "Semua"),
+            ...uniqueCategories,
+          ]),
+        ];
+
+        setCategories(combinedCategories);
         setMenuItems(mappedItems);
       } catch (error) {
         console.error("Error fetching menu:", error);
@@ -270,7 +302,12 @@ export default function BuyerOrderPage() {
       };
 
       setBuyerTransaction(transactionData);
-      router.push("/dashboard/buyer/transaction");
+
+      if (paymentMethod === "QRIS") {
+        setShowQRModal(true);
+      } else {
+        router.push("/dashboard/buyer/transaction");
+      }
     } catch (error: unknown) {
       console.error("Checkout Error:", error);
       let errorMessage = "Terjadi kesalahan saat memproses pesanan.";
@@ -503,7 +540,7 @@ export default function BuyerOrderPage() {
                   Metode Pembayaran
                 </p>
                 <div className="flex space-x-2">
-                  {["QRIS", "TRANSFER", "TUNAI"].map((method) => (
+                  {["QRIS", "TUNAI"].map((method) => (
                     <button
                       key={method}
                       onClick={() => setPaymentMethod(method)}
@@ -555,6 +592,44 @@ export default function BuyerOrderPage() {
               <ChevronRight className="w-5 h-5" />
             </div>
           </button>
+        </div>
+      )}
+
+      {/* QRIS Modal */}
+      {showQRModal && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-white">
+          <div className="flex-1 flex flex-col items-center justify-center p-4">
+            <div className="text-center mb-4">
+              <h2 className="text-xl font-bold text-coffee-900">Pindai QRIS</h2>
+              <p className="text-sm text-coffee-500">
+                Total: {formatRupiah(totalAmount)}
+              </p>
+            </div>
+
+            <div className="flex-1 w-full max-h-[70vh] flex items-center justify-center overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/qr-amelamr.jpg"
+                alt="QRIS Payment"
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            <div className="w-full max-w-xs space-y-3 mt-6 pb-6">
+              <button
+                onClick={() => router.push("/dashboard/buyer/transaction")}
+                className="w-full py-4 bg-coffee-600 text-white font-bold rounded-xl shadow-lg hover:bg-coffee-700 transition-all active:scale-[0.98]"
+              >
+                Sudah Bayar
+              </button>
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="w-full py-3 bg-transparent text-coffee-600 font-semibold rounded-xl border border-coffee-200 hover:bg-coffee-50 transition-all"
+              >
+                Kembali
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

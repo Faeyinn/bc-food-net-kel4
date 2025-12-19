@@ -48,3 +48,15 @@ body {
   font-weight: 500;
   font-style: normal;
 }
+
+.titan-one-100 {
+  font-family: "Titan One", sans-serif;
+  font-weight: 100;
+  font-style: normal;
+}
+
+.titan-one-300 {
+  font-family: "Titan One", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}

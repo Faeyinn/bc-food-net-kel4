@@ -4,8 +4,18 @@ import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email, password, role } = body; // Role is optional now for login, but we can check it if provided
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error("Login: Failed to parse JSON body", parseError);
+      return NextResponse.json(
+        { message: "Format request tidak valid (harap kirim JSON)" },
+        { status: 400 }
+      );
+    }
+
+    const { email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -14,6 +24,8 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log(`[Login] Attempting login for email: ${email}`);
+
     // Query user from 'users' table
     const { data: user, error } = await supabase
       .from("users")
@@ -21,20 +33,34 @@ export async function POST(request: Request) {
       .eq("email", email)
       .single();
 
-    if (error || !user) {
-      console.log("Login failed: User not found or DB error", error);
+    if (error) {
+      console.error("[Login] Supabase error during user lookup:", error);
+      if (error.code === "PGRST116") {
+        // No rows found
+        return NextResponse.json(
+          { message: "User tidak ditemukan" },
+          { status: 401 }
+        );
+      }
+      return NextResponse.json(
+        { message: "Gagal menghubungkan ke database" },
+        { status: 500 }
+      );
+    }
+
+    if (!user) {
+      console.log("[Login] User not found in database");
       return NextResponse.json(
         { message: "User tidak ditemukan" },
         { status: 401 }
       );
     }
 
-    console.log("User found:", user.email);
-    // console.log("Stored Hash:", user.password); // Security risk to log hash in prod, but ok for debug
+    console.log(`[Login] User found: ${user.email}, comparing password...`);
 
     // Verify Password
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log("Password valid:", isPasswordValid);
+    console.log(`[Login] Password valid: ${isPasswordValid}`);
 
     if (!isPasswordValid) {
       return NextResponse.json({ message: "Password salah" }, { status: 401 });
@@ -49,14 +75,16 @@ export async function POST(request: Request) {
       isDemo: false,
     };
 
+    console.log(`[Login] Login successful for: ${email}`);
+
     return NextResponse.json(
       { message: "Login berhasil", user: userData },
       { status: 200 }
     );
-  } catch (error) {
-    console.error("Login Error:", error);
+  } catch (err: any) {
+    console.error("[Login] Internal Server Error:", err);
     return NextResponse.json(
-      { message: "Terjadi kesalahan internal server" },
+      { message: "Terjadi kesalahan internal server", error: err.message },
       { status: 500 }
     );
   }

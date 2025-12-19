@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronDown, ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronDown, ChevronRight, ArrowLeft, Printer } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../context/AuthContext";
 import { supabase } from "@/app/lib/supabase";
 import Swal from "sweetalert2";
+import { jsPDF } from "jspdf";
 
 interface Order {
   id_transaksi: string;
@@ -14,6 +15,8 @@ interface Order {
   status_pesanan: string;
   total_harga: number;
   no_meja?: string;
+  jenis_transaksi?: string;
+  tanggal_transaksi?: string;
 }
 
 interface OrderDetail {
@@ -117,6 +120,87 @@ export default function SellerOrdersPage() {
       console.error("Error updating status:", error);
       Swal.fire("Error", "Gagal memperbarui status", "error");
     }
+  };
+
+  const handlePrintReceipt = (order: Order, details: OrderDetail[]) => {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: [80, 150], // Thermal printer size
+    });
+
+    // Font setting
+    doc.setFont("helvetica", "normal");
+
+    // Header
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("BC Food Net", 40, 10, { align: "center" });
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text("Universitas Andalas", 40, 15, { align: "center" });
+    doc.text("------------------------------------------------", 40, 18, {
+      align: "center",
+    });
+
+    // Transaction Info
+    doc.setFontSize(8);
+    doc.text(`ID: ${order.id_transaksi.substring(0, 13)}...`, 5, 25);
+    doc.text(
+      `Tgl: ${
+        order.tanggal_transaksi
+          ? new Date(order.tanggal_transaksi).toLocaleString("id-ID")
+          : "-"
+      }`,
+      5,
+      30
+    );
+    doc.text(`Meja: ${order.no_meja}`, 5, 35);
+    doc.text(`Metode: ${order.jenis_transaksi === "NON-TUNAI" ? "QRIS" : (order.jenis_transaksi || "TUNAI")}`, 5, 40);
+    doc.text("------------------------------------------------", 40, 45, {
+      align: "center",
+    });
+
+    // Items
+    let yPos = 50;
+    details.forEach((item) => {
+      doc.setFont("helvetica", "bold");
+      doc.text(`${item.item.nama_item}`, 5, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `${item.jumlah_item} x Rp ${item.item.harga_item.toLocaleString(
+          "id-ID"
+        )}`,
+        5,
+        yPos + 4
+      );
+      doc.text(`Rp ${item.subtotal.toLocaleString("id-ID")}`, 75, yPos + 4, {
+        align: "right",
+      });
+      yPos += 10;
+    });
+
+    // Total
+    doc.text("------------------------------------------------", 40, yPos, {
+      align: "center",
+    });
+    yPos += 5;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("TOTAL", 5, yPos);
+    doc.text(`Rp ${order.total_harga.toLocaleString("id-ID")}`, 75, yPos, {
+      align: "right",
+    });
+
+    // Footer
+    yPos += 10;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.text("Terima kasih atas kunjungan Anda!", 40, yPos, {
+      align: "center",
+    });
+
+    doc.save(`Struk-${order.id_transaksi.substring(0, 8)}.pdf`);
   };
 
   const handleViewOrder = async (order: Order) => {
@@ -259,7 +343,6 @@ export default function SellerOrdersPage() {
 
         {/* Footer Info & Back Button */}
         <div className="mt-8 text-center">
-
           <div className="flex justify-center mb-4 space-x-3">
             <div className="w-4 h-4 bg-coffee-200 rounded-full"></div>
             <div className="w-4 h-4 bg-coffee-200 rounded-full"></div>
@@ -302,6 +385,14 @@ export default function SellerOrdersPage() {
                 <p>
                   <strong>Total:</strong> Rp{" "}
                   {selectedOrder.total_harga.toLocaleString("id-ID")}
+                </p>
+                <p>
+                  <strong>Metode Bayar:</strong>{" "}
+                  <span className="font-bold text-coffee-600">
+                    {selectedOrder.jenis_transaksi === "NON-TUNAI"
+                      ? "QRIS"
+                      : selectedOrder.jenis_transaksi || "TUNAI"}
+                  </span>
                 </p>
               </div>
 
@@ -355,7 +446,15 @@ export default function SellerOrdersPage() {
               )}
             </div>
 
-            <div className="p-4 bg-gray-50 border-t border-gray-100 text-right">
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-2">
+              <button
+                onClick={() => handlePrintReceipt(selectedOrder, orderDetails)}
+                disabled={loadingDetails}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-700 flex items-center disabled:opacity-50"
+              >
+                <Printer className="w-4 h-4 mr-1.5" />
+                Cetak Struk
+              </button>
               <button
                 onClick={() => setShowDetailModal(false)}
                 className="px-4 py-2 bg-coffee-600 text-white rounded-lg font-bold text-sm hover:bg-coffee-700"

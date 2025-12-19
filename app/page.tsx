@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { User, Lock, Mail, Phone, ShoppingBag, MapPin } from "lucide-react";
+import {
+  User,
+  Lock,
+  Mail,
+  Phone,
+  ShoppingBag,
+  MapPin,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { useAuth } from "./context/AuthContext";
@@ -11,10 +20,13 @@ const LoginPage = () => {
   const { user, login, register } = useAuth();
 
   const [showRegister, setShowRegister] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
     name: "",
     phone: "",
     role: "Pembeli",
@@ -65,13 +77,23 @@ const LoginPage = () => {
     if (
       !formData.email ||
       !formData.password ||
+      !formData.confirmPassword ||
       !formData.name ||
       !formData.phone
     ) {
       Swal.fire({
         icon: "error",
         title: "Pendaftaran Gagal",
-        text: "Mohon lengkapi semua data pendaftaran (Nama, Email, Telepon, Password).",
+        text: "Mohon lengkapi semua data pendaftaran.",
+      });
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      Swal.fire({
+        icon: "error",
+        title: "Pendaftaran Gagal",
+        text: "Password dan Konfirmasi Password tidak cocok.",
       });
       return;
     }
@@ -186,14 +208,50 @@ const LoginPage = () => {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-transparent text-white border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base placeholder:text-gray-300"
+                className="w-full pl-10 pr-12 py-3 rounded-xl bg-transparent text-white border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base placeholder:text-gray-300"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
+
+            {showRegister && (
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  placeholder="Konfirmasi Password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-12 py-3 rounded-xl bg-transparent text-white border border-gray-300 focus:ring-coffee-500 focus:border-coffee-500 outline-none transition-all text-sm md:text-base placeholder:text-gray-300"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            )}
 
             <button
               onClick={showRegister ? handleRegister : handleLogin}

@@ -56,6 +56,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         body: JSON.stringify({ email, role, password }),
       });
 
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Login: Received non-JSON response:", text);
+        throw new Error(
+          `Server returned unexpected response (not JSON). Status: ${response.status}`
+        );
+      }
+
       const data = await response.json();
 
       if (!response.ok) {

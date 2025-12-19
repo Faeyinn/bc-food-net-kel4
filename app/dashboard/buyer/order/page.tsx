@@ -252,7 +252,7 @@ export default function BuyerOrderPage() {
       // 3. Create Transaksi
       const transactionId = `TRX${timestampStr}${randomSuffix}`;
 
-      let dbJenisTransaksi = "NON-TUNAI";
+      let dbJenisTransaksi = "QRIS";
       if (paymentMethod === "TUNAI" || paymentMethod === "Cash") {
         dbJenisTransaksi = "TUNAI";
       }

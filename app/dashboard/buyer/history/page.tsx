@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../context/AuthContext";
+import { useData } from "../../../context/DataContext";
 import { supabase } from "@/app/lib/supabase";
 import { formatRupiah } from "../../../utils/format";
 
@@ -59,8 +60,11 @@ interface RawOrderItem {
 export default function BuyerHistoryPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { buyerTransaction } = useData();
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  // tick to trigger re-render for realtime timestamps
+  const [tick, setTick] = useState(0);
 
   // Modal State
   const [selectedTransaction, setSelectedTransaction] =
@@ -135,6 +139,103 @@ export default function BuyerHistoryPage() {
 
     fetchHistory();
   }, [user]);
+
+  // update tick every 30 seconds to refresh relative timestamps
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30 * 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Robust parsing: try native parse and also try forcing UTC (append Z).
+  // Choose the parse result that is closest to now (heuristic) so stored timestamps
+  // without timezone are interpreted correctly.
+  const parseTimestampBest = (dateStr?: string) => {
+    if (!dateStr) return null;
+    const tryParse = (s: string) => {
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
+    const candidates: Date[] = [];
+    const p1 = tryParse(dateStr);
+    if (p1) candidates.push(p1);
+
+    // if no timezone info, try appending Z to treat as UTC
+    if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(dateStr)) {
+      const p2 = tryParse(dateStr + "Z");
+      if (p2) candidates.push(p2);
+    }
+
+    if (candidates.length === 0) return null;
+    if (candidates.length === 1) return candidates[0];
+
+    // pick the candidate whose timestamp is closest to now
+    const now = Date.now();
+    let best = candidates[0];
+    let bestDiff = Math.abs(now - best.getTime());
+    for (let i = 1; i < candidates.length; i++) {
+      const diff = Math.abs(now - candidates[i].getTime());
+      if (diff < bestDiff) {
+        best = candidates[i];
+        bestDiff = diff;
+      }
+    }
+    return best;
+  };
+
+  const formatRelativeTime = (dateStr?: string) => {
+    const d = parseTimestampBest(dateStr);
+    if (!d) return "-";
+    const dt = d.getTime();
+    const diffSec = Math.floor((Date.now() - dt) / 1000);
+    if (diffSec < 60) return "Baru saja";
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin} menit yang lalu`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `${diffHour} jam yang lalu`;
+    const diffDays = Math.floor(diffHour / 24);
+    if (diffDays < 7) return `${diffDays} hari yang lalu`;
+    // fallback to formatted date in WIB
+    try {
+      const fmt = new Intl.DateTimeFormat("id-ID", {
+        timeZone: "Asia/Jakarta",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return fmt.format(d) + " WIB";
+    } catch (e) {
+      return d.toLocaleString();
+    }
+  };
+
+  const formatFullDateTime = (dateStr?: string) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "-";
+    // Format explicitly in WIB (Asia/Jakarta) regardless of client timezone
+    try {
+      const fmt = new Intl.DateTimeFormat("id-ID", {
+        timeZone: "Asia/Jakarta",
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return `${fmt.format(d)} WIB`;
+    } catch (e) {
+      return d.toLocaleString("id-ID", {
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+  };
 
   const fetchTransactionDetails = async (transaction: Transaction) => {
     setLoadingDetails(true);
@@ -251,16 +352,9 @@ export default function BuyerHistoryPage() {
                       {t.store_name}
                     </h3>
                     <p className="text-xs text-gray-500">
-                      {new Date(t.tanggal_transaksi).toLocaleDateString(
-                        "id-ID",
-                        {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
-                      )}
+                      {buyerTransaction && buyerTransaction.id === t.id_transaksi
+                        ? buyerTransaction.timestamp
+                        : formatFullDateTime(t.tanggal_transaksi)}
                     </p>
                   </div>
                 </div>
@@ -275,7 +369,9 @@ export default function BuyerHistoryPage() {
 
               <div className="flex justify-between items-center pl-10">
                 <div className="flex bg-gray-50 px-2 py-1 rounded text-xs text-gray-600 border border-gray-200">
-                  {t.jenis_transaksi}
+                  {String(t.jenis_transaksi || "").toUpperCase() === "NON-TUNAI"
+                    ? "QRIS"
+                    : t.jenis_transaksi}
                 </div>
                 <div className="flex items-center">
                   <p className="font-bold text-coffee-600 text-lg mr-2">
@@ -329,15 +425,10 @@ export default function BuyerHistoryPage() {
                 <div className="text-right">
                   <p className="text-sm text-gray-500">Tanggal</p>
                   <p className="text-sm font-semibold text-gray-900">
-                    {new Date(
-                      selectedTransaction.tanggal_transaksi
-                    ).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {buyerTransaction &&
+                    buyerTransaction.id === selectedTransaction.id_transaksi
+                      ? buyerTransaction.timestamp
+                      : formatFullDateTime(selectedTransaction.tanggal_transaksi)}
                   </p>
                 </div>
               </div>

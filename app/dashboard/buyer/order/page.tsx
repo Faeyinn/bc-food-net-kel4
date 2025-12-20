@@ -252,8 +252,11 @@ export default function BuyerOrderPage() {
       // 3. Create Transaksi
       const transactionId = `TRX${timestampStr}${randomSuffix}`;
 
-      let dbJenisTransaksi = "QRIS";
-      if (paymentMethod === "TUNAI" || paymentMethod === "Cash") {
+      // DB constraint allows only 'TUNAI' or 'NON-TUNAI'
+      // Map client payment methods to those values
+      let dbJenisTransaksi = "NON-TUNAI";
+      const pmUpper = String(paymentMethod || "").toUpperCase();
+      if (pmUpper === "TUNAI" || pmUpper === "CASH") {
         dbJenisTransaksi = "TUNAI";
       }
 
